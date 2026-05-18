@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<div class="card">
+
+    <h2>Editar Conductor</h2>
+
+    <form method="POST" enctype="multipart/form-data">
+
+        <input name="nombre" value="{{ conductor[1] }}">
+        <label for="dni">DNI</label>
+        <input name="dni" value="{{ conductor[2] }}">
+        <label for="licencia_vencimiento">Vto Lic.</label>
+        <input type="date" name="licencia_vencimiento" value="{{ conductor[3] }}">
+        <label for="cbu">CBU</label>
+        <input name="cbu" value="{{ conductor[4] }}">
+
+        <hr>
+
+        <label>Licencia Frente</label>
+        <input type="file" name="licencia_frente">
+
+        <label>Licencia Dorso</label>
+        <input type="file" name="licencia_dorso">
+        <br>
+
+        <label>DNI Frente</label>
+        <input type="file" name="dni_frente">
+
+        <label>DNI Dorso</label>
+        <input type="file" name="dni_dorso">
+        <br>
+
+        <label>Contrato</label>
+        <input type="file" name="contrato">
+        <br>
+
+        <button>Guardar cambios</button>
+    </form>
+</div>
+{% endblock %}

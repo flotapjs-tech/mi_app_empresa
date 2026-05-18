@@ -1,0 +1,84 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+
+<div style="display: flex; justify-content: space-between; align-items: center;">
+<h2>Gastos mensuales</h2>
+<div style="text-align: right;" >
+    <a href="/vehiculos">
+        <button>volver</button>
+    </a>
+</div>
+</div>
+<div style="margin-bottom: 15px;">
+    <a href="/mecanica" class="btn">Ver Gastos de Mecanica</a>
+</div>
+
+<!-- 📅 Selector de mes -->
+<form method="GET">
+    <input type="month" name="mes" value="{{ mes }}">
+    <button type="submit">Ver</button>
+</form>
+
+<br>
+
+<div class="card">
+    <table class="tabla-gastos">
+        <tr style="background:#eee;">
+            <th>Auto</th>
+            <th>Dominio</th>
+            <th>Patente</th>
+            <th>Seguro</th>
+            <th>VTV</th>
+            <th>Satelital</th>
+            <th>Mecanica</th>
+            <th>Total</th>
+            <th>Guardar</th>
+        </tr>
+
+        {% for d in datos %}
+        <tr>
+            <form method="POST">
+                <td>{{ d[1] }}</td>
+                <td>{{ d[2] }}</td>
+
+                <!-- ID + MES ocultos -->
+                <input type="hidden" name="vehiculo_id" value="{{ d[0] }}">
+                <input type="hidden" size="8" name="mes" value="{{ mes }}">
+
+                <td>
+                    <input type="number" size="5"  name="patente" value="{{ d[3] }}">
+                </td>
+
+                <td>
+                    <input type="number" size="6"  name="seguro" value="{{ d[4] }}">
+                </td>
+
+                <td>
+                    <input type="number"  name="vtv" value="{{ d[5] }}">
+                </td>
+
+                <td>
+                    <input type="number"  name="satelital" value="{{ d[6] }}">
+                </td>
+
+                <td><a href="/mecanica?vehiculo_id={{ d[0]}}&mes={{ mes }}">{{ d[7]}}</a>
+                    
+                </td>
+
+                <!-- TOTAL -->
+                <td>                   
+                    {{ (d[3] + d[4] + d[5] + d[6]) +d[7] | round(2) }}
+                </td>
+
+                <td>
+                    <button type="submit">💾</button>
+                </td>
+            </form>
+        </tr>
+        {% endfor %}
+
+    </table>
+</div>
+{% endblock %}

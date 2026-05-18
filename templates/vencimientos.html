@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<div class="card">
+    <h2>Vencimientos</h2>
+
+    <table>
+        <tr>
+            <th>Auto</th>
+            <th>Patente</th>
+            <th>VTV</th>
+            <th>Remis</th>
+            <th>GNC</th>
+            <th>Tubo</th>
+        </tr>
+
+        {% for d in datos %}
+        <tr>
+            <td>{{ d[1] }}</td>
+            <td>{{ d[2] }}</td>
+            <td>{{ d[3] }}</td>
+            <td>{{ d[4] }}</td>
+            <td>{{ d[5] }}</td>
+            <td>{{ d[6] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+{% endblock %}

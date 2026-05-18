@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<div class="card">
+    <table>
+        <tr>
+            <th>Conductor</th>
+            <th>Infracciones</th>
+        </tr>
+
+        {% for r in resumen %}
+        <tr onclick="window.location='/infracciones_conductor/{{ r.id }}'">
+            <td>{{ r.nombre }}</td>
+            <td>{{ r.total }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <form method="POST" action="/eliminar_infraccion/{{ i.id }}">
+        <button>Eliminar</button>
+    </form>
+</div>
+{% endblock %}

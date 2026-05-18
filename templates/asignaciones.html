@@ -1,0 +1,99 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<h2>Asignaciones</h2>
+
+<!-- FORMULARIO -->
+<form method="POST">
+
+    <select name="conductor_id" required>
+        <option value="">Conductor</option>
+        {% for c in conductores %}
+            <option value="{{ c.id }}">{{ c.nombre }}</option>
+        {% endfor %}
+    </select>
+
+    <select name="vehiculo_id" required>
+        <option value="">Vehículo</option>
+        {% for v in vehiculos %}
+            <option value="{{ v.id }}">{{ v.auto }} {{ v.patente }}</option>
+        {% endfor %}
+    </select>
+    <label for="start">Fecha</label>
+    <input type="date" name="fecha" value="{{ fecha }}">
+
+    <label for="start">Turno</label>
+    <select name="turno" required>      
+        <option value="dia">Día (06 a 18)</option>
+        <option value="noche">Noche (18 a 06)</option>
+    </select>
+
+    <button type="submit">Guardar</button>
+</form>
+
+<hr>
+
+<!-- FILTROS -->
+<h3>Buscar turno</h3>
+<form method="GET" style="display:flex; gap:10px; align-items:center;">
+
+    <input type="date" name="fecha" value="{{ fecha }}">
+
+    <select name="turno">
+        <option value="">Turno</option>
+        <option value="dia">Día</option>
+        <option value="noche">Noche</option>
+    </select>
+
+    <select name="vehiculo_id">
+        <option value="">Vehículo</option>
+        {% for v in vehiculos %}
+            <option value="{{ v.id }}">{{ v.patente }}</option>
+        {% endfor %}
+    </select>
+
+    <button type="submit">Filtrar</button>
+
+    <!-- 👇 BOTÓN HOY -->
+    <a href="/asignaciones?hoy=1" 
+       style="padding:6px 12px; background:#28a745; color:white; text-decoration:none; border-radius:4px;">
+       Hoy
+    </a>
+    <a href="/asignaciones?historial=1" 
+       style="padding:6px 12px; background:#28a745; color:white; text-decoration:none; border-radius:4px;">
+       Historial
+    </a>
+
+
+</form>
+
+<hr>
+
+<!-- LISTADO -->
+<table>
+    <tr>
+        <th>Fecha</th>
+        <th>Turno</th>
+        <th>Conductor</th>
+        <th>Vehículo</th>
+        <th>Eliminar</th>
+    </tr>
+
+    {% for a in asignaciones %}
+    <tr>
+        <td>{{ a.fecha }}</td>
+        <td>{{ a.turno }}</td>
+        <td>{{ a.nombre }}</td>
+        <td>{{ a.vehiculo }} {{a.patente}}</td>
+        <td>
+            <form action="{{ url_for('eliminar_asignacion', id=a.id) }}" method="POST" style="display:inline;">
+            <button onclick="return confirm('¿Eliminar asignación?')">
+                🗑️
+            </button>
+        </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

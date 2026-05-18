@@ -1,0 +1,116 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+
+    <h2>👨‍✈️ Conductores</h2>
+    <form method="POST" enctype="multipart/form-data">
+
+        <input name="nombre" placeholder="Nombre" required>
+        <input name="dni" placeholder="DNI" required>
+        <label>vto Lic</label>
+        <input  type="date" name="licencia_vencimiento">
+        
+
+        <input name="cbu" placeholder="CBU">
+        <br>
+        <hr>
+
+        <label>Lic Frente</label>
+        <input type="file" name="licencia_frente">
+
+        <label>Lic Dorso</label>
+        <input type="file" name="licencia_dorso">
+        <br>
+
+        <label>DNI Frente</label>
+        <input type="file" name="dni_frente">
+
+        <label>DNI Dorso</label>
+        <input type="file" name="dni_dorso">
+        <br>
+
+        <label>Contrato</label>
+        <input type="file" name="contrato">
+
+        <button>Guardar</button>
+    </form>
+
+
+
+    <h3>Lista de conductores</h3>
+
+    <table>
+        <tr>
+            <th>Nombre</th>
+            <th>DNI</th>
+            <th>Vto. Lic</th>
+            <th>CBU</th>
+            <th>Foto Lic</th>
+            <th>Foto DNI</th>
+            <th>Contrato</th>
+            <th>Editar</th>
+            <th>Borrar</th>
+        </tr>
+
+    {% for d in datos %}
+    <tr>
+
+        <td>{{ d.nombre }}</td>
+        <td>{{ d.dni }}</td>
+
+        <!-- VENCIMIENTO CON ALERTA -->
+        <td>
+            {% if d.alerta == "vencido" %}
+                <span style="color:red;">{{ d.vto }}</span>
+            {% elif d.alerta == "por_vencer" %}
+                <span style="color:orange;">{{ d.vto }}</span>
+            {% else %}
+                {{ d.vto }}
+            {% endif %}
+        </td>
+
+        <td>{{ d.cbu }}</td>
+
+        <!-- LICENCIA -->
+        <td>
+            {% if d.lic_frente %}
+                <a href="{{ url_for('static', filename='uploads/' + d.lic_frente) }}" target="_blank">Frente</a>
+            {% endif %}
+            |
+            {% if d.lic_dorso %}
+                <a href="{{ url_for('static', filename='uploads/' + d.lic_dorso) }}" target="_blank">Dorso</a>
+            {% endif %}
+        </td>
+
+        <!-- DNI -->
+        <td>
+            {% if d.dni_frente %}
+                <a href="{{ url_for('static', filename='uploads/' + d.dni_frente) }}" target="_blank">Frente</a>
+            {% endif %}
+            |
+            {% if d.dni_dorso %}
+                <a href="{{ url_for('static', filename='uploads/' + d.dni_dorso) }}" target="_blank">Dorso</a>
+            {% endif %}
+        </td>
+
+        <!-- CONTRATO -->
+        <td>
+            {% if d.contrato %}
+                <a href="{{ url_for('static', filename='uploads/' + d.contrato) }}" target="_blank">Ver</a>
+            {% endif %}
+        </td>
+        <td>
+            <a class="btn-editar" href="/editar_conductor/{{ d.id }}">✏️</a>
+        </td>
+        <td>   
+            <a class="btn-eliminar" href="/eliminar_conductor/{{ d.id }}"
+            onclick="return confirm('¿Seguro?')">
+            🗑️
+            </a>
+        </td>
+    </tr>
+    {% endfor %}
+    </table>
+
+{% endblock %}

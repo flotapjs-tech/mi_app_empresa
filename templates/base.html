@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pijos S.R.L</title>
+    <style>
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Arial;
+    background-color: #f4f6f9;
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: 220px;
+    height: 100vh;
+    background-color: #2f3542;
+    position: fixed;
+    padding-top: 20px;
+}
+
+.sidebar h2 {
+    color: white;
+    text-align: center;
+}
+
+.sidebar a {
+    display: block;
+    color: #dcdde1;
+    padding: 12px;
+    text-decoration: none;
+}
+
+.sidebar a:hover {
+    background-color: #57606f;
+}
+
+/* CONTENT */
+.content {
+    margin-left: 220px;
+    padding: 20px;
+}
+
+/* CARDS */
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* BOTONES */
+button {
+    background-color: #2ed573;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #26c065;
+}
+
+/* INPUTS */
+input, select {
+    padding: 7px;
+    margin-right: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+/* TABLAS TIPO EXCEL */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th {
+    background-color: #f1f2f6;
+    text-align: left;
+    padding: 10px;
+}
+
+td {
+    padding: 10px;
+    border-top: 1px solid #ddd;
+}
+
+tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* BOTÓN ELIMINAR */
+.btn-delete {
+    background-color: #ff4757;
+}
+
+.btn-delete:hover {
+    background-color: #e84118;
+}
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h2>Pijos SRL</h2>
+    <a href="/logout" class="logout-btn">Cerrar Sesion</a>
+    <a href="/">🏠 Inicio</a>
+    <a href="/conductores">👨‍✈️ Conductores</a>
+    <a href="/adelantos">💰 Adelantos</a>
+    <a href="/vehiculos">🚛 Vehículos</a>
+    <a href="#">⚠️ Infracciones</a>
+</div>
+
+<div class="content">
+    {% block content %}
+    {% endblock %}
+</div>
+
+</body>
+</html>

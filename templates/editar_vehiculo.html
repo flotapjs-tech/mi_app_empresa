@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<h2>Editar Vehículo</h2>
+
+<form method="POST">
+
+    <p><b>{{ vehiculo.auto }} - {{ vehiculo.patente }}</b></p>
+
+    <label>VTV</label>
+    <input type="date" name="vtv" value="{{ vehiculo.vtv }}">
+
+    <label>Remis</label>
+    <input type="date" name="remis" value="{{ vehiculo.remis }}">
+
+    <label>GNC</label>
+    <input type="date" name="gnc" value="{{ vehiculo.gnc }}">
+
+    <label>Tubo</label>
+    <input type="date" name="tubo" value="{{ vehiculo.tubo }}">
+
+    <button>Guardar cambios</button>
+
+</form>
+
+{% endblock %}

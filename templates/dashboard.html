@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 220px;
+            background: #2c3e50;
+            color: white;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: white;
+            padding: 10px;
+            margin: 8px 0;
+            text-decoration: none;
+        }
+
+        .content {
+            flex: 1;
+            padding: 30px;
+            background: #f4f6f8;
+        }
+
+        .cards {
+            display: flex;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            flex: 1;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            margin: 0;
+        }
+
+        .active {
+            background: #1abc9c;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h2>🚗 Sistema</h2>
+    <a href="/">Dashboard</a>
+    <a href="/conductores">Conductores</a>
+    <a href="/adelantos">Adelantos</a>
+</div>
+
+<div class="content">
+
+    <h1>📊 Dashboard</h1>
+
+    <div class="cards">
+        <div class="card">
+            <h2>{{ total_conductores }}</h2>
+            <p>Conductores</p>
+        </div>
+
+        <div class="card">
+            <h2>${{ total_sueldos }}</h2>
+            <p>Sueldos</p>
+        </div>
+
+        <div class="card">
+            <h2>${{ total_adelantos }}</h2>
+            <p>Adelantos</p>
+        </div>
+
+        <div class="card">
+            <h2>${{ deuda_total }}</h2>
+            <p>Deuda total</p>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

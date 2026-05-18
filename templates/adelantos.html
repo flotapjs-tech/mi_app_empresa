@@ -1,0 +1,123 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<h2>Nuevo Adelanto</h2>
+
+
+
+<form method="POST" action="{{ url_for('guardar_adelanto') }}">
+
+    <label>Conductor:</label>
+    <select name="conductor_id" required>
+        <option value="">Seleccionar</option>
+        {% for c in conductores %}
+            <option value="{{ c.id }}">{{ c.nombre }}</option>
+        {% endfor %}
+    </select>
+
+    <label>Monto:</label>
+    <input type="number" name="monto" required>
+
+    <label>Fecha:</label>
+    <input type="date" name="fecha" required value="{{ fecha_desde or '' }}">
+
+    <button type="submit">Guardar</button>
+
+</form>
+
+<hr>
+
+<h3>Buscar Adelanto</h3>
+
+<!-- 🔍 FILTROS -->
+<form method="GET">
+
+    <label>Conductor:</label>
+    <select name="conductor_id">
+        <option value="">Todos</option>
+        {% for c in conductores %}
+            <option value="{{ c.id }}"
+                {% if conductor_id == c.id|string %}selected{% endif %}>
+                {{ c.nombre }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <label>Desde:</label>
+    <input type="date" name="fecha_desde" value="{{ fecha_desde }}">
+
+    <label>Hasta:</label>
+    <input type="date" name="fecha_hasta" value="{{ fecha_hasta }}">
+
+    <button type="submit">Filtrar</button>
+    <a href="/adelantos">Limpiar</a>
+
+</form>
+
+<hr>
+
+{% if resumen_conductores %}
+<h3>Totales por conductor</h3>
+
+<table>
+    <tr>
+        <th>Conductor</th>
+        <th>Cantidad</th>
+        <th>Total</th>
+    </tr>
+
+    {% for r in resumen_conductores %}
+    <tr>
+        <td>{{ r.nombre }}</td>
+        <td>{{ r.cantidad }}</td>
+        <td>${{ r.total }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endif %}
+<h4>Total busqueda: ${{ total }}</h4>
+<!-- 📊 TABLA -->
+<table>
+    <tr>
+    {% if modo == "resumen" %}
+        <th>Conductor</th>
+        <th>Cantidad</th>
+        <th>Total</th>
+    {% else %}
+        <th>Fecha</th>
+        <th>Conductor</th>
+        <th>Monto</th>
+        <th>Acciones</th>
+    {% endif %}
+</tr>
+
+    {% for a in adelantos %}
+    <tr>
+        {% if modo == "resumen" %}
+        <td>
+            <a href="/adelantos? conductor_id={{ a.conductor_id}}">
+                {{ a.conductor }}
+            </a>
+            </td>
+        <td>{{ a.cantidad }}</td>
+        <td>{{ a.total }}</td>
+        {% else %}
+        <td>{{ a.fecha }}</td>
+        <td>{{ a.comductor }}</td>
+        <td>{{ a.monto }}</td>
+        <td>
+            <form action="{{ url_for('eliminar_adelanto', id=a.id) }}" method="POST" style="display:inline;">
+                <button onclick="return confirm('¿Eliminar adelanto?')">
+                    🗑️
+                </button>
+            </form>
+        </td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+
+</table>
+
+
+{% endblock %}

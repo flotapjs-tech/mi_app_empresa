@@ -1,0 +1,159 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<h3>📥 Importar infracciones</h3>
+
+<form method="POST" action="/importar_infracciones">
+    
+    <label>Vehículo:</label>
+    <select name="vehiculo_id" required>
+        <option value="">Patente</option>
+        {% for v in vehiculos %}
+            <option value="{{ v.id }}">{{ v.auto }} - {{ v.patente }}</option>
+        {% endfor %}
+    </select>
+
+    <label>Jurisdicción:</label>
+    <select name="jurisdiccion">
+        <option value="CABA">CABA</option>
+        <option value="Provincia">Provincia</option>
+    </select>
+    <br>
+    <label style="display: inline-block;">Pegar datos:</label><br>
+    <textarea name="texto" style="display: inline-block;" rows="3" cols="80" placeholder="Pegá acá las infracciones"></textarea>
+
+    <br><br>
+
+    <button type="submit">Importar</button>
+</form>
+
+<hr>
+
+<h2>Cargar Infracciones</h2>    
+
+<form style="padding-bottom: 40px;" method="POST" >
+
+    <input name="numero" placeholder="N° infracción" required>
+
+    <select name="vehiculo_id" required>
+        <option value="">Vehículo</option>
+        {% for v in vehiculos %}
+            <option value="{{ v.id }}">{{ v.auto }} - {{ v.patente }}</option>
+        {% endfor %}
+    </select>
+
+    <input type="date" name="fecha" required>
+    <input type="time" name="hora" required>
+
+    <select name="jurisdiccion">
+        <option value="capital">Capital</option>
+        <option value="provincia">Provincia</option>
+    </select>
+
+    <input type="number" name="monto" placeholder="Monto" required>
+
+    <input type="date" name="fecha_vencimiento" required>
+
+    <button type="submit">Guardar</button>
+    <a href="/infracciones_asignadas">
+         <button type="button">Asignadas</button>
+    </a>
+
+</form>
+<hr>
+<a href="{{ url_for('infracciones', modo='detalle') }}">
+        <button {% if modo == 'detalle' %}style="font-weight:bold;"{% endif %}>
+            Detalle
+        </button>
+    </a>
+
+    <a href="{{ url_for('infracciones', modo='resumen') }}">
+        <button {% if modo == 'resumen' %}style="font-weight:bold;"{% endif %}>
+            Resumen
+        </button>
+    </a>
+
+
+{% if modo == 'detalle' %}
+
+<table>
+    <tr>
+        <th>Patente</th>
+        <th>N°</th>
+        <th>Fecha</th>
+        <th>Hora</th>
+        <th>Chofer</th>
+        <th>Monto</th>
+        <th>Vto</th>
+        <th>Carga</th>
+    </tr>
+
+    {% for i in infracciones %}
+    <tr class="{% if i.fecha_vencimiento and i.fecha_vencimiento <= hoy %}background:#ffcccc{% endif %}">
+        <td>{{ i.patente }}</td>
+        <td>{{ i.numero }}</td>
+        <td>{{ i.fecha }}</td>
+        <td>{{ i.hora }}</td>
+        <td>{{ i.nombre or 'Sin asignar' }}</td>
+        <td>
+    {% if i.estado == 'controlador' %}
+        <span style="color:red; font-weight:bold;">
+            Solucionar con controlador
+        </span>
+    {% elif i.estado == 'vencida' %}
+        <span style="color:red;">
+            {{ i.monto }}
+        </span>
+    {% else %}
+        {{ i.monto }}
+    {% endif %}
+        </td>
+        <td>{{ i.fecha_vencimiento }}</td>
+        <td>
+    {% if i.nueva %}
+            <span style="color:red; font-weight: bold;">
+                NUEVA
+            </span>
+    {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+
+</table>
+
+{% endif %}
+
+{% if modo == 'resumen' %}
+
+<table>
+    <tr>
+        <th>Vehículo</th>
+        <th>Cant. CABA</th>
+        <th>$ CABA</th>
+        <th>Cant Prov.</th>
+        <th>$ Prov</th>
+        <th>$ Total</th>
+    </tr>
+
+    {% for i in infracciones %}
+    <tr>
+        <td>
+            <a href="{{ url_for('infracciones', modo='detalle', vehiculo_id=i.id) }}">
+                {{ i.patente }}
+            </a>
+        </td>
+        </td>
+        <td>{{ i.cantidad_caba or 0 }}</td>
+        <td>{{ i.monto_caba or 0 }}</td>
+        <td>{{ i.cantidad_provincia or 0}}</td>
+        <td>{{ i.monto_provincia or 0 }}</td>
+        <td>{{ i.monto_total or 0 }}</td>
+    </tr>
+    {% endfor %}
+
+</table>
+
+{% endif %}
+
+{% endblock %}

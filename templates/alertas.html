@@ -1,0 +1,86 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<h2>⚠️ Alertas de vencimientos</h2>
+
+{% if total == 0 %}
+    <p>No hay vencimientos próximos 🎉</p>
+{% endif %}
+
+<!-- 🔴 LICENCIAS -->
+<h3>Licencias de conductores</h3>
+
+<table>
+    <tr>
+        <th>Conductor</th>
+        <th>Vencimiento</th>
+    </tr>
+
+    {% for l in licencias %}
+    <tr>
+        <td>{{ l.nombre }}</td>
+        <td>
+    {% if l.vencido %}
+        <span style="color:red">{{ l.fecha }}</span>
+    {% else %}
+        <span style="color:orange">{{ l.fecha }}</span>
+    {% endif %}
+</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<br>
+
+<!-- 🔴 VEHÍCULOS -->
+<h3>Vehículos</h3>
+<table >
+    <tr>
+        <th>Patente</th>
+        <th>Tipo</th>
+        <th>Vencimiento</th>
+    </tr>
+
+    {% for v in vehiculos %}
+    <tr>
+        <td>{{ v.patente }}</td>
+        <td>{{ v.tipo }}</td>
+        <td>
+    {% if v.vencido %}
+        <span style="color:red">{{ v.fecha }}</span>
+    {% else %}
+        <span style="color:orange">{{ v.fecha }}</span>
+    {% endif %}
+</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<br>
+
+<!-- 🔴 INFRACCIONES -->
+<h3>Infracciones</h3>
+<table >
+    <tr>
+        <th>Número</th>
+        <th>Monto</th>
+        <th>Vencimiento</th>
+    </tr>
+
+    {% for i in infracciones %}
+    <tr>
+        <td>{{ i.numero }}</td>
+        <td>{{ i.monto }}</td>
+        <td>
+    {% if i.vencido %}
+        <span style="color:red">{{ i.fecha }}</span>
+    {% else %}
+        <span style="color:orange">{{ i.fecha }}</span>
+    {% endif %}
+</td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

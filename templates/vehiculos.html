@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+
+        <div><h2>Vehículos</h2>
+            <div style="margin-bottom: 15px;">
+                <a href="/gastos" class="btn">Ver Gastos</a>
+            </div>
+        </div>
+
+            <form style="padding-bottom: 30px;" method="POST">
+                <input size="6" name="auto" placeholder="Auto" required>
+                <input size="6" name="patente" placeholder="Patente" required>
+                <input size="6" name="modelo" placeholder="modelo año" required>
+                <label for="vtv">VTV</label>
+                <input type="date" name="vtv">
+                <label for="remis">remis</label>
+                <input type="date" name="remis">
+                <label for="gnc">gnc</label>
+                <input type="date" name="gnc">
+                <label for="tubo">tubo</label>
+                <input type="date" name="tubo">
+                <button>Guardar</button>
+            </form>
+
+            <table>
+                <tr>
+                    <th>Id</th>
+                    <th>Auto</th>
+                    <th>Patente</th>
+                    <th>modelo</th>
+                    <th>vtv</th>
+                    <th>Remis</th>
+                    <th>GNC</th>
+                    <th>Tubo</th>
+                    <th>Editar</th>
+                    <th>Eliminar</th>
+                </tr>
+
+            {% for v in vehiculos %}
+                <tr>
+                    <td>{{ v.id }}</td>
+                    <td>{{ v.auto }}</td>
+                    <td>{{ v.patente }}</td>
+                    <td>{{ v.modelo }}</td>
+                    <td>{{ v.vtv }}</td>
+                    <td>{{ v.remis }}</td>
+                    <td>{{ v.gnc }}</td>
+                    <td>{{ v.tubo }}</td>
+                    <td>
+                        <a href="{{ url_for('editar_vehiculo', id=v.id) }}">✏️</a>
+                    </td>
+                    <td>
+                        <form action="{{ url_for('eliminar_vehiculo', id=v.id) }}" method="POST" style="display:inline;">
+                            <button onclick="return confirm('¿Eliminar?')">🗑️</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </table>
+
+    </div>
+
+
+{% endblock %}

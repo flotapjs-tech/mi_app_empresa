@@ -1,0 +1,49 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center;">
+<h2>Resument de infracciones por conductor</h2>
+<div style="text-align: right;" >
+    <a href="/infracciones">
+        <button>volver</button>
+    </a>
+</div>
+</div>
+
+<table>
+    <tr>
+        <th>Conductor</th>
+        <th>Total</th> 
+        <th>Nuevas</th> 
+        <th>Pagadas</th>
+        <th>Pendientes</th> 
+        <th>$ Total</th>    
+        <th>$ Pendientes</th>
+    </tr>
+
+    {% for r in resumen %}
+    <tr>
+        <td>
+            <a href=" {{ url_for('infracciones_conductor', conductor_id=r.conductor_id) }}">
+                {{ r.nombre or 'Sin asignar'}}
+            </a>
+        </td>
+        <td>{{ r.total_infracciones or 0 }}</td>
+        <td>
+            {% if r.nuevas > 0 %}
+                <span style="background: red; color: rgb(240, 233, 233); padding: 3px 8px; 
+                border-radius:6px; font-weight: bold;">{{ r.nueva }}</span>
+            {% else %}
+            0
+            {% endif %}
+        </td>
+        <td>{{ r.total_pagadas or 0 }}</td>
+        <td>{{ r.total_pendientes or 0 }}</td>
+        <td>{{ r.monto_total or 0 }}</td>
+        <td>{{ r.monto_pendiente or 0 }}</td>
+    </tr>
+    {% endfor %}
+
+</table>
+
+{% endblock %}

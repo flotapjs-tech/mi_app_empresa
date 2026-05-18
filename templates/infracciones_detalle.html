@@ -1,0 +1,82 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; ">
+    <h2>Detalle de Infracciones de: {{ nombre }}</h2>
+    <div style="text-align: right; padding: 10px;" >
+        <a href="/infracciones_asignadas">
+            <button>volver</button>
+        </a>
+    </div>
+</div>
+
+<table>
+    <tr>
+        <th>Patente</th>
+        <th>Numero</th>
+        <th>Fecha</th>
+        <th>Hora</th>
+        {% if es_sin_asignar %}
+            <th>turno ant</th>
+            <th>Turno sig</th>
+            <th>Asignar</th>
+        {% endif %}
+        <th>Monto</th>
+        <th>Estado</th>
+        <th>Marcar paga</th>
+        <th>Eliminar</th>
+    </tr>
+
+    {% for i in infracciones %}
+    <tr>
+        <td>{{ i.patente }}</td>
+        <td>{{ i.numero }}</td>
+        <td>{{ i.fecha }}</td>
+        <td>{{ i.hora }}</td>
+        {% if es_sin_asignar %}
+             <td>{{ i.anterior }}</td>
+             <td>{{ i.siguiente }}</td>
+             <td>
+                <form method="POST" action="/asignar_infraccion/{{ i.id }}">
+                    <select name="conductor_id">
+                        <option value="">Seleccionar conductor</option>
+                        {% for c in conductores %}
+                            <option value="{{ c.id }}">{{ c.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit">Asignar</button>
+                </form>
+            </td>
+        {% endif %}
+        <td>{{ i.monto }}</td>
+        <td>
+            {% if i.pagada %}
+                <span style="color:green;">Pagada</span>
+            {% else %}
+                <span style="color:red;">Pendiente</span>
+            {% endif %}
+        </td>
+        <td>
+        {% if not i.pagada  %}
+            <form method="POST" action="{{ url_for('marcar_pagada', id=i.id) }}">
+                <button type="submit">Marcar pagada</button>
+            </form>
+        {% else %}
+            <button disabled style="opacity: 0,5;">Pagada</button>
+            ✔️
+        {% endif %}
+      </td>
+        
+        <td>
+            <a href="/eliminar_infraccion/{{ i.id }}">
+                <button>🗑️</button>
+            </a>
+        </td>
+        
+
+    </tr>
+    {% endfor %}
+
+</table>
+
+{% endblock %}
