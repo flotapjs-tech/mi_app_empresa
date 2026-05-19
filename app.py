@@ -270,8 +270,8 @@ def login():
 
         conn.close()
 
-        if user and check_password_hash(user[2], password):
-            session["usuario"] = user[1]
+        if user and check_password_hash(user["password"], password):
+            session["usuario"] = user["usuario"]
             return redirect("/")
         else:
             return "Usuario o contraseña incorrectos"
