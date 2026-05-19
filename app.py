@@ -2640,19 +2640,48 @@ def alertas_global():
         SELECT COUNT(*) as total
         FROM conductores
         WHERE licencia_vencimiento IS NOT NULL
+        AND licencia_vencimiento != ''
         AND date(licencia_vencimiento) <= %s
     """, (limite,))
     lic = cursor.fetchone()["total"]
 
-    # vehículos (sumamos los 4 tipos)
+    # vehículos
     cursor.execute("""
         SELECT 
-            (SELECT COUNT(*) FROM vehiculos WHERE vtv IS NOT NULL AND date(vtv) <= %s) +
-            (SELECT COUNT(*) FROM vehiculos WHERE remis IS NOT NULL AND date(remis) <= %s) +
-            (SELECT COUNT(*) FROM vehiculos WHERE gnc IS NOT NULL AND date(gnc) <= %s) +
-            (SELECT COUNT(*) FROM vehiculos WHERE tubo IS NOT NULL AND date(tubo) <= %s) 
+            (
+                SELECT COUNT(*)
+                FROM vehiculos
+                WHERE vtv IS NOT NULL
+                AND vtv != ''
+                AND date(vtv) <= %s
+            )
+            +
+            (
+                SELECT COUNT(*)
+                FROM vehiculos
+                WHERE remis IS NOT NULL
+                AND remis != ''
+                AND date(remis) <= %s
+            )
+            +
+            (
+                SELECT COUNT(*)
+                FROM vehiculos
+                WHERE gnc IS NOT NULL
+                AND gnc != ''
+                AND date(gnc) <= %s
+            )
+            +
+            (
+                SELECT COUNT(*)
+                FROM vehiculos
+                WHERE tubo IS NOT NULL
+                AND tubo != ''
+                AND date(tubo) <= %s
+            )
         AS total
     """, (limite, limite, limite, limite))
+
     veh = cursor.fetchone()["total"]
 
     # infracciones
@@ -2660,8 +2689,10 @@ def alertas_global():
         SELECT COUNT(*) as total
         FROM infracciones
         WHERE fecha_vencimiento IS NOT NULL
+        AND fecha_vencimiento != ''
         AND date(fecha_vencimiento) <= %s
     """, (limite,))
+
     inf = cursor.fetchone()["total"]
 
     conn.close()
