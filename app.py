@@ -362,11 +362,12 @@ def conductores():
 
             fecha_vto = d["licencia_vencimiento"]
 
-            # si viene como string
-            if isinstance(fecha_vto, str):
-                fecha_vto = d["licencia_vencimiento"]
-                hoy = datetime.now().date()
-                
+            # si viene datetime -> convertir a date
+            if isinstance(fecha_vto, datetime):
+                fecha_vto = fecha_vto.date()
+
+            hoy = datetime.now().date()
+
             if fecha_vto < hoy:
                 alerta = "vencido"
 
