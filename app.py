@@ -362,9 +362,12 @@ def conductores():
 
             fecha_vto = d["licencia_vencimiento"]
 
-            # si viene datetime -> convertir a date
-            if isinstance(fecha_vto, datetime):
-                fecha_vto = fecha_vto.date()
+            # convertir si viene string
+            if isinstance(fecha_vto, str):
+                fecha_vto = datetime.strptime(
+                    fecha_vto,
+                    "%Y-%m-%d"
+                ).date()
 
             hoy = datetime.now().date()
 
