@@ -55,11 +55,11 @@
     <button type="submit">Filtrar</button>
 
     <!-- 👇 BOTÓN HOY -->
-    <a href="/asignaciones?hoy=1" 
+    <a href="/asignaciones%shoy=1" 
        style="padding:6px 12px; background:#28a745; color:white; text-decoration:none; border-radius:4px;">
        Hoy
     </a>
-    <a href="/asignaciones?historial=1" 
+    <a href="/asignaciones%shistorial=1" 
        style="padding:6px 12px; background:#28a745; color:white; text-decoration:none; border-radius:4px;">
        Historial
     </a>
@@ -87,7 +87,7 @@
         <td>{{ a.vehiculo }} {{a.patente}}</td>
         <td>
             <form action="{{ url_for('eliminar_asignacion', id=a.id) }}" method="POST" style="display:inline;">
-            <button onclick="return confirm('¿Eliminar asignación?')">
+            <button onclick="return confirm('¿Eliminar asignación%s')">
                 🗑️
             </button>
         </form>

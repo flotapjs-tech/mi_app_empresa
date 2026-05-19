@@ -3,6 +3,8 @@ from datetime import datetime, timedelta, date
 from flask import redirect, url_for, flash
 from flask import Flask, render_template, request
 import sqlite3
+import psycopg2
+import os
 from functools import wraps
 from flask import session, redirect
 from werkzeug.security import check_password_hash
@@ -10,11 +12,33 @@ import os
 from werkzeug.utils import secure_filename
 import re
 import hashlib
+from psycopg2.extras import RealDictCursor
 
 
 app = Flask(__name__)
 
 app.secret_key = "080980110980060681"
+
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql://empresa_3cu1_user:XV5AVy6PHS4KPU2cqRjqv6Y1zjr8WauW@dpg-d8661bb7uimc73c0s6bg-a.virginia-postgres.render.com/empresa_3cu1"
+)
+
+
+def get_connection():
+
+    return psycopg2.connect(
+        DATABASE_URL,
+        cursor_factory=RealDictCursor
+    )
+
+try:
+    conn = get_connection()
+    print("POSTGRES CONECTADO OK")
+    conn.close()
+
+except Exception as e:
+    print("ERROR POSTGRES:", e)
 
 def obtener_turno_y_fecha(fecha_str, hora_str):
 
@@ -69,9 +93,9 @@ def buscar_conductor_automatico(
     cursor.execute("""
         SELECT conductor_id
         FROM asignaciones
-        WHERE vehiculo_id = ?
-        AND fecha = ?
-        AND turno = ?
+        WHERE vehiculo_id = %s
+        AND fecha = %s
+        AND turno = %s
     """, (
         vehiculo_id,
         fecha_busqueda,
@@ -94,8 +118,8 @@ def login_requerido(f):
 
 
 # Crear base de datos si no existe
-def crear_db():
-    conn = sqlite3.connect("empresa.db")
+'''def crear_db():
+    conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -220,7 +244,7 @@ def crear_db():
     for u, p in usuarios:
         try:
             cursor.execute(
-            "INSERT INTO usuarios (usuario, password) VALUES (?, ?)",
+            "INSERT INTO usuarios (usuario, password) VALUES (%s, %s)",
             (u, generate_password_hash(p))
         )
         except:
@@ -231,17 +255,17 @@ def crear_db():
     conn.close()
 
 crear_db()
-
+'''
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         usuario = request.form["usuario"]
         password = request.form["password"]
 
-        conn = sqlite3.connect("empresa.db")
+        conn = get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT * FROM usuarios WHERE usuario = ?", (usuario,))
+        cursor.execute("SELECT * FROM usuarios WHERE usuario = %s", (usuario,))
         user = cursor.fetchone()
 
         conn.close()
@@ -269,7 +293,7 @@ def inicio():
 @login_requerido
 def conductores():
 
-    conn = sqlite3.connect("empresa.db")
+    conn = get_connection()
     cursor = conn.cursor()
 
     if request.method == "POST":
@@ -305,7 +329,7 @@ def conductores():
         cursor.execute("""
             INSERT INTO conductores 
             (nombre, dni, licencia_vencimiento, cbu, licencia_frente, licencia_dorso, dni_frente, dni_dorso, contrato)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """, (
             nombre,
             dni,
@@ -364,14 +388,14 @@ def conductores():
 @login_requerido
 def eliminar_conductor(id):
 
-    conn = sqlite3.connect("empresa.db")
+    conn = get_connection()
     cursor = conn.cursor()
 
     # 👉 traer archivos antes de borrar
     cursor.execute("""
         SELECT licencia_frente, licencia_dorso, dni_frente, dni_dorso, contrato
         FROM conductores
-        WHERE id = ?
+        WHERE id = %s
     """, (id,))
     
     archivos = cursor.fetchone()
@@ -387,7 +411,7 @@ def eliminar_conductor(id):
                     os.remove(ruta)
 
     # 👉 borrar de la DB
-    cursor.execute("DELETE FROM conductores WHERE id = ?", (id,))
+    cursor.execute("DELETE FROM conductores WHERE id = %s", (id,))
     conn.commit()
     conn.close()
 
@@ -397,7 +421,7 @@ def eliminar_conductor(id):
 @login_requerido
 def editar_conductor(id):
 
-    conn = sqlite3.connect("empresa.db")
+    conn = get_connection()
     cursor = conn.cursor()
 
     carpeta = "static/uploads/"
@@ -411,7 +435,7 @@ def editar_conductor(id):
         # 👉 traer archivos actuales
         cursor.execute("""
             SELECT licencia_frente, licencia_dorso, dni_frente, dni_dorso, contrato
-            FROM conductores WHERE id = ?
+            FROM conductores WHERE id = %s
         """, (id,))
         actuales = cursor.fetchone()
 
@@ -438,10 +462,10 @@ def editar_conductor(id):
 
         cursor.execute("""
             UPDATE conductores SET
-            nombre=?, dni=?, licencia_vencimiento=?, cbu=?,
-            licencia_frente=?, licencia_dorso=?,
-            dni_frente=?, dni_dorso=?, contrato=?
-            WHERE id=?
+            nombre=%s, dni=%s, licencia_vencimiento=%s, cbu=%s,
+            licencia_frente=%s, licencia_dorso=%s,
+            dni_frente=%s, dni_dorso=%s, contrato=%s
+            WHERE id=%s
         """, (
             nombre, dni, licencia_vencimiento, cbu,
             licencia_frente, licencia_dorso,
@@ -452,7 +476,7 @@ def editar_conductor(id):
         conn.close()
         return redirect("/conductores")
 
-    cursor.execute("SELECT * FROM conductores WHERE id = ?", (id,))
+    cursor.execute("SELECT * FROM conductores WHERE id = %s", (id,))
     conductor = cursor.fetchone()
 
     conn.close()
@@ -463,8 +487,7 @@ def editar_conductor(id):
 @login_requerido
 def asignaciones():
 
-    conn = sqlite3.connect('empresa.db')
-    conn.row_factory = sqlite3.Row
+    conn = get_connection()
     cursor = conn.cursor()
 
     hoy = date.today().isoformat()
@@ -496,9 +519,9 @@ def asignaciones():
         cursor.execute("""
             SELECT 1
             FROM asignaciones
-            WHERE fecha = ?
-            AND turno = ?
-            AND vehiculo_id = ?
+            WHERE fecha = %s
+            AND turno = %s
+            AND vehiculo_id = %s
             LIMIT 1
         """, (
             fecha,
@@ -515,9 +538,9 @@ def asignaciones():
         cursor.execute("""
             SELECT 1
             FROM asignaciones
-            WHERE fecha = ?
-            AND turno = ?
-            AND conductor_id = ?
+            WHERE fecha = %s
+            AND turno = %s
+            AND conductor_id = %s
             LIMIT 1
         """, (
             fecha,
@@ -539,7 +562,7 @@ def asignaciones():
                 fecha,
                 turno
             )
-            VALUES (?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s)
         """, (
             conductor_id,
             vehiculo_id,
@@ -550,7 +573,7 @@ def asignaciones():
         conn.commit()
 
         return redirect(
-            f'/asignaciones?fecha={fecha}'
+            f'/asignaciones%sfecha={fecha}'
         )
 
     # ======================
@@ -599,15 +622,15 @@ def asignaciones():
     # FILTROS
     # ======================
     if fecha:
-        query += " AND a.fecha = ?"
+        query += " AND a.fecha = %s"
         params.append(fecha)
 
     if turno:
-        query += " AND a.turno = ?"
+        query += " AND a.turno = %s"
         params.append(turno)
 
     if vehiculo_id:
-        query += " AND a.vehiculo_id = ?"
+        query += " AND a.vehiculo_id = %s"
         params.append(vehiculo_id)
 
     # ======================
@@ -657,10 +680,10 @@ def asignaciones():
 @login_requerido
 def eliminar_asignacion(id):
 
-    conn = sqlite3.connect('empresa.db')
+    conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("DELETE FROM asignaciones WHERE id = ?", (id,))
+    cursor.execute("DELETE FROM asignaciones WHERE id = %s", (id,))
 
     conn.commit()
     conn.close()
@@ -671,8 +694,7 @@ def eliminar_asignacion(id):
 @login_requerido
 def adelantos():
 
-    conn = sqlite3.connect('empresa.db')
-    conn.row_factory = sqlite3.Row
+    conn = get_connection()
     cursor = conn.cursor()
 
     conductor_id = request.args.get('conductor_id')
@@ -698,11 +720,11 @@ def adelantos():
         """
 
         if fecha_desde:
-            query += " AND a.fecha >= ?"
+            query += " AND a.fecha >= %s"
             params.append(fecha_desde)
 
         if fecha_hasta:
-            query += " AND a.fecha <= ?"
+            query += " AND a.fecha <= %s"
             params.append(fecha_hasta)
 
         query += """
@@ -726,17 +748,17 @@ def adelantos():
             c.id as conductor_id
             FROM adelantos a
             JOIN conductores c ON a.conductor_id = c.id
-            WHERE a.conductor_id = ?
+            WHERE a.conductor_id = %s
         """
 
         params.append(conductor_id)
 
         if fecha_desde:
-            query += " AND a.fecha >= ?"
+            query += " AND a.fecha >= %s"
             params.append(fecha_desde)
 
         if fecha_hasta:
-            query += " AND a.fecha <= ?"
+            query += " AND a.fecha <= %s"
             params.append(fecha_hasta)
 
         query += " ORDER BY a.fecha DESC"
@@ -764,7 +786,7 @@ def adelantos():
 @login_requerido
 def guardar_adelanto():
 
-    conn = sqlite3.connect('empresa.db')
+    conn = get_connection()
     cursor = conn.cursor()
 
     conductor_id = request.form.get('conductor_id')
@@ -777,7 +799,7 @@ def guardar_adelanto():
 
     cursor.execute("""
         INSERT INTO adelantos (conductor_id, monto, fecha)
-        VALUES (?, ?, ?)
+        VALUES (%s, %s, %s)
     """, (conductor_id, monto, fecha))
 
     conn.commit()
@@ -788,11 +810,11 @@ def guardar_adelanto():
 @app.route('/eliminar_adelanto/<int:id>', methods=['POST'])
 @login_requerido
 def eliminar_adelanto(id):
-    conn = sqlite3.connect('empresa.db')
+    conn = get_connection()
     cursor = conn.cursor()
 
     
-    cursor.execute("DELETE FROM adelantos WHERE id = ?", (id,))
+    cursor.execute("DELETE FROM adelantos WHERE id = %s", (id,))
     conn.commit()
     conn.close()
 
@@ -802,8 +824,7 @@ def eliminar_adelanto(id):
 @login_requerido
 def vehiculos():
 
-    conn = sqlite3.connect("empresa.db")
-    conn.row_factory = sqlite3.Row
+    conn = get_connection()
     cursor = conn.cursor()
 
     if request.method == "POST":
@@ -817,7 +838,7 @@ def vehiculos():
 
         cursor.execute("""
             INSERT INTO vehiculos (auto, patente, modelo, vtv, remis, gnc, tubo)
-            VALUES ( ?, ?, ?, ?, ?, ?, ?)
+            VALUES ( %s, %s, %s, %s, %s, %s, %s)
         """, (auto, patente, modelo, vtv, remis, gnc, tubo))
 
         conn.commit()
@@ -831,8 +852,7 @@ def vehiculos():
 
 @app.route('/editar_vehiculo/<int:id>', methods=['GET', 'POST'])
 def editar_vehiculo(id):
-    conn = sqlite3.connect('empresa.db')
-    conn.row_factory = sqlite3.Row
+    conn = get_connection()
     cursor = conn.cursor()
 
     if request.method == 'POST':
@@ -843,15 +863,15 @@ def editar_vehiculo(id):
 
         cursor.execute("""
             UPDATE vehiculos
-            SET vtv = ?, remis = ?, gnc = ?, tubo = ?
-            WHERE id = ?
+            SET vtv = %s, remis = %s, gnc = %s, tubo = %s
+            WHERE id = %s
         """, (vtv, remis, gnc, tubo, id))
 
         conn.commit()
         conn.close()
         return redirect('/vehiculos')
 
-    cursor.execute("SELECT * FROM vehiculos WHERE id = ?", (id,))
+    cursor.execute("SELECT * FROM vehiculos WHERE id = %s", (id,))
     vehiculo = cursor.fetchone()
 
     conn.close()
@@ -863,10 +883,10 @@ def editar_vehiculo(id):
 @login_requerido
 def eliminar_vehiculo(id):
 
-    conn = sqlite3.connect('empresa.db')
+    conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("DELETE FROM vehiculos WHERE id = ?", (id,))
+    cursor.execute("DELETE FROM vehiculos WHERE id = %s", (id,))
 
     conn.commit()
     conn.close()
@@ -877,7 +897,7 @@ def eliminar_vehiculo(id):
 @login_requerido
 def vencimientos():
 
-    conn = sqlite3.connect("empresa.db")
+    conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -894,7 +914,7 @@ def vencimientos():
 @app.route("/gastos", methods=["GET", "POST"])
 @login_requerido
 def gastos():
-    conn = sqlite3.connect("empresa.db")
+    conn = get_connection()
     cursor = conn.cursor()
 
     # 📌 Obtener mes (por defecto el actual)
@@ -916,7 +936,7 @@ def gastos():
         # 👉 Ver si ya existe gasto para ese vehículo y mes
         cursor.execute("""
             SELECT id FROM gastos
-            WHERE vehiculo_id = ? AND mes = ?
+            WHERE vehiculo_id = %s AND mes = %s
         """, (vehiculo_id, mes_form))
 
         existe = cursor.fetchone()
@@ -925,14 +945,14 @@ def gastos():
             # UPDATE
             cursor.execute("""
                 UPDATE gastos
-                SET seguro=?, patente=?, vtv=?, satelital=?
-                WHERE vehiculo_id=? AND mes=?
+                SET seguro=%s, patente=%s, vtv=%s, satelital=%s
+                WHERE vehiculo_id=%s AND mes=%s
             """, (seguro, patente, vtv, satelital, vehiculo_id, mes_form))
         else:
             # INSERT
             cursor.execute("""
                 INSERT INTO gastos (vehiculo_id, mes, seguro, patente, vtv, satelital)
-                VALUES (?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s)
             """, (vehiculo_id, mes_form, seguro, patente, vtv, satelital))
 
         conn.commit()
@@ -954,11 +974,11 @@ def gastos():
     FROM vehiculos v
 
     LEFT JOIN gastos g 
-        ON v.id = g.vehiculo_id AND g.mes = ?
+        ON v.id = g.vehiculo_id AND g.mes = %s
 
     LEFT JOIN mecanica m 
         ON v.id = m.vehiculo_id 
-        AND strftime('%Y-%m', m.fecha) = ?
+        AND strftime('%Y-%m', m.fecha) = %s
 
     GROUP BY v.id
 """, (mes, mes))
@@ -977,13 +997,13 @@ def gastos():
 @login_requerido
 def vehiculo_detalle(id):
 
-    conn = sqlite3.connect("empresa.db")
+    conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
         SELECT fecha, descripcion, monto
         FROM mantenimiento_detalle
-        WHERE vehiculo_id = ?
+        WHERE vehiculo_id = %s
         ORDER BY fecha DESC
     """, (id,))
 
@@ -996,7 +1016,7 @@ def vehiculo_detalle(id):
 @app.route("/mecanica", methods=["GET", "POST"])
 @login_requerido
 def mecanica():
-    conn = sqlite3.connect("empresa.db")
+    conn = get_connection()
     cursor = conn.cursor()
 
     # 👉 GUARDAR NUEVO REGISTRO
@@ -1009,7 +1029,7 @@ def mecanica():
 
         cursor.execute("""
             INSERT INTO mecanica (vehiculo_id, fecha, descripcion, monto, kilometros)
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s)
         """, (vehiculo_id, fecha, descripcion, monto, kilometros))
 
         conn.commit()
@@ -1031,11 +1051,11 @@ def mecanica():
     params = []
 
     if vehiculo_id:
-        query += "AND m.vehiculo_id = ?"
+        query += "AND m.vehiculo_id = %s"
         params.append(vehiculo_id)
 
     if mes:
-        query += "AND strftime('%Y-%m', m.fecha) = ?"
+        query += "AND strftime('%Y-%m', m.fecha) = %s"
         params.append(mes)
 
     query += " ORDER BY m.fecha DESC"
@@ -1072,8 +1092,7 @@ def mecanica():
 @login_requerido
 def infracciones():
 
-    conn = sqlite3.connect('empresa.db')
-    conn.row_factory = sqlite3.Row
+    conn = get_connection()
     cursor = conn.cursor()
 
     modo = request.args.get('modo', 'detalle')
@@ -1121,7 +1140,7 @@ def infracciones():
                 monto,
                 fecha_vencimiento
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """, (
             numero,
             vehiculo_id,
@@ -1252,8 +1271,7 @@ def infracciones():
 @login_requerido
 def importar_infracciones():
 
-    conn = sqlite3.connect('empresa.db')
-    conn.row_factory = sqlite3.Row
+    conn = get_connection()
     cursor = conn.cursor()
 
     texto = request.form['texto']
@@ -1348,7 +1366,7 @@ def importar_infracciones():
 
                     # 🟢 NORMAL
                     m2 = re.search(
-                        r'\$[\d\.,]+\s+\$([\d\.,]+).*?(\d{2}-\d{2}-\d{4})',
+                        r'\$[\d\.,]+\s+\$([\d\.,]+).*%s(\d{2}-\d{2}-\d{4})',
                         lineas[j]
                     )
 
@@ -1414,9 +1432,9 @@ def importar_infracciones():
                 cursor.execute("""
                     SELECT conductor_id
                     FROM asignaciones
-                    WHERE vehiculo_id = ?
-                    AND fecha = ?
-                    AND turno = ?
+                    WHERE vehiculo_id = %s
+                    AND fecha = %s
+                    AND turno = %s
                 """, clave)
 
                 res = cursor.fetchone()
@@ -1444,7 +1462,7 @@ def importar_infracciones():
                     fecha_vencimiento,
                     estado
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 numero,
                 vehiculo_id,
@@ -1487,8 +1505,7 @@ def importar_infracciones():
 @login_requerido
 def infracciones_resumen():
 
-    conn = sqlite3.connect('empresa.db')
-    conn.row_factory = sqlite3.Row
+    conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -1512,8 +1529,7 @@ def infracciones_resumen():
 @login_requerido
 def importar_infracciones():
 
-    conn = sqlite3.connect('empresa.db')
-    conn.row_factory = sqlite3.Row
+    conn = get_connection()
     cursor = conn.cursor()
 
     texto = request.form['texto']
@@ -1539,7 +1555,7 @@ def importar_infracciones():
             # NÚMERO DE ACTA (opcional)
             # =========================
             acta = re.search(
-                r'Acta\s*N[°º]?\s*([A-Z0-9\-]+)',
+                r'Acta\s*N[°º]%s\s*([A-Z0-9\-]+)',
                 bloque,
                 re.IGNORECASE
             )
@@ -1614,7 +1630,7 @@ def importar_infracciones():
                 # DESCUENTO + VENCIMIENTO
                 # =========================
                 descuento = re.search(
-                    r'\\$([\d\.\,]+).?hasta el (\d{2}-\d{2}-\d{4})',
+                    r'\\$([\d\.\,]+).%shasta el (\d{2}-\d{2}-\d{4})',
                     bloque,
                     re.IGNORECASE | re.DOTALL
                 )
@@ -1683,7 +1699,7 @@ def importar_infracciones():
                 cursor.execute("""
                     SELECT 1
                     FROM infracciones
-                    WHERE numero = ?
+                    WHERE numero = %s
                     LIMIT 1""", (numero,))
 
             else:    
@@ -1691,7 +1707,7 @@ def importar_infracciones():
                 cursor.execute("""
                     SELECT 1
                     FROM infracciones
-                    WHERE hash_unico = ?
+                    WHERE hash_unico = %s
                     LIMIT 1
                 """, (hash_unico,))
 
@@ -1730,7 +1746,7 @@ def importar_infracciones():
                     estado,
                     fecha_carga
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 numero,
                 hash_unico,
@@ -1755,7 +1771,7 @@ def importar_infracciones():
                 cursor.execute("""
                     SELECT nombre
                     FROM conductores
-                    WHERE id = ?
+                    WHERE id = %s
                 """, (conductor_id,))
 
                 conductor = cursor.fetchone()
@@ -1801,8 +1817,7 @@ def importar_infracciones():
 @login_requerido
 def importar_infracciones():
 
-    conn = sqlite3.connect('empresa.db')
-    conn.row_factory = sqlite3.Row
+    conn = get_connection()
     cursor = conn.cursor()
 
     texto = request.form['texto']
@@ -1817,7 +1832,7 @@ def importar_infracciones():
     if "📄" in texto:
 
         bloques = re.findall(
-            r'(📄.*?)(?=📄|\Z)',
+            r'(📄.*%s)(%s=📄|\Z)',
             texto,
             re.DOTALL
         )
@@ -1826,7 +1841,7 @@ def importar_infracciones():
     else:
 
         bloques = re.split(
-            r'(?=Acta N[°º])',
+            r'(%s=Acta N[°º])',
             texto
         )
 
@@ -1887,7 +1902,7 @@ def importar_infracciones():
             # NUMERO ACTA (OPCIONAL)
             # =========================
             acta = re.search(
-                r'Acta\s*N[°º]?\s*([A-Z0-9\-]+)',
+                r'Acta\s*N[°º]%s\s*([A-Z0-9\-]+)',
                 bloque,
                 re.IGNORECASE
             )
@@ -1972,7 +1987,7 @@ def importar_infracciones():
                 # DESCUENTO + VENCIMIENTO
                 # =========================
                 descuento = re.search(
-                    r'\$([\d\.\,]+).*?hasta el (\d{2}-\d{2}-\d{4})',
+                    r'\$([\d\.\,]+).*%shasta el (\d{2}-\d{2}-\d{4})',
                     bloque,
                     re.IGNORECASE | re.DOTALL
                 )
@@ -2075,9 +2090,9 @@ def importar_infracciones():
                 cursor.execute("""
                     SELECT conductor_id
                     FROM asignaciones
-                    WHERE vehiculo_id = ?
-                    AND fecha = ?
-                    AND turno = ?
+                    WHERE vehiculo_id = %s
+                    AND fecha = %s
+                    AND turno = %s
                 """, clave)
 
                 res = cursor.fetchone()
@@ -2107,7 +2122,7 @@ def importar_infracciones():
                     estado,
                     fecha_carga
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 numero,
                 hash_unico,
@@ -2140,7 +2155,7 @@ def importar_infracciones():
                 cursor.execute("""
                     SELECT nombre
                     FROM conductores
-                    WHERE id = ?
+                    WHERE id = %s
                 """, (conductor_id,))
 
                 conductor = cursor.fetchone()
@@ -2196,10 +2211,10 @@ def importar_infracciones():
 @login_requerido
 def eliminar_infraccion(id):
 
-    conn = sqlite3.connect('empresa.db')
+    conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("DELETE FROM infracciones WHERE id = ?", (id,))
+    cursor.execute("DELETE FROM infracciones WHERE id = %s", (id,))
     conn.commit()
     conn.close()
 
@@ -2210,8 +2225,7 @@ def eliminar_infraccion(id):
 @login_requerido
 def infracciones_conductor(conductor_id):
 
-    conn = sqlite3.connect('empresa.db')
-    conn.row_factory = sqlite3.Row
+    conn = get_connection()
     cursor = conn.cursor()
 
     conductor = None
@@ -2220,7 +2234,7 @@ def infracciones_conductor(conductor_id):
 
         cursor.execute("""
             SELECT nombre FROM conductores 
-            WHERE id = ?""", (conductor_id,))
+            WHERE id = %s""", (conductor_id,))
         conductor = cursor.fetchone()
 
 
@@ -2262,7 +2276,7 @@ def infracciones_conductor(conductor_id):
                 i.vehiculo_id
             FROM infracciones i
             JOIN vehiculos v ON i.vehiculo_id = v.id
-            WHERE i.conductor_id = ?
+            WHERE i.conductor_id = %s
             ORDER BY i.fecha DESC, i.hora DESC
         """, (conductor_id,))
 
@@ -2331,9 +2345,9 @@ def infracciones_conductor(conductor_id):
                 FROM asignaciones a
                 JOIN conductores c
                     ON a.conductor_id = c.id
-                WHERE a.vehiculo_id = ?
-                AND a.fecha = ?
-                AND a.turno = ?
+                WHERE a.vehiculo_id = %s
+                AND a.fecha = %s
+                AND a.turno = %s
             """, (
                 i["vehiculo_id"],
                 fecha_anterior,
@@ -2350,9 +2364,9 @@ def infracciones_conductor(conductor_id):
                 FROM asignaciones a
                 JOIN conductores c
                     ON a.conductor_id = c.id
-                WHERE a.vehiculo_id = ?
-                AND a.fecha = ?
-                AND a.turno = ?
+                WHERE a.vehiculo_id = %s
+                AND a.fecha = %s
+                AND a.turno = %s
             """, (
                 i["vehiculo_id"],
                 fecha_siguiente,
@@ -2388,8 +2402,7 @@ def infracciones_conductor(conductor_id):
 @login_requerido
 def infracciones_asignadas():
 
-    conn = sqlite3.connect('empresa.db')
-    conn.row_factory = sqlite3.Row
+    conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -2467,7 +2480,7 @@ def asignar_infraccion(id):
 
     conductor_id = request.form.get('conductor_id')
 
-    conn = sqlite3.connect('empresa.db')
+    conn = get_connection()
     cursor = conn.cursor()
 
     if not conductor_id:
@@ -2480,8 +2493,8 @@ def asignar_infraccion(id):
 
     cursor.execute("""
         UPDATE infracciones
-        SET conductor_id = ?
-        WHERE id = ?
+        SET conductor_id = %s
+        WHERE id = %s
     """, (conductor_id, id))
 
     conn.commit()
@@ -2494,13 +2507,13 @@ def asignar_infraccion(id):
 @login_requerido
 def marcar_pagada(id):
 
-    conn = sqlite3.connect('empresa.db')
+    conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
         UPDATE infracciones
         SET pagada = 1
-        WHERE id = ?
+        WHERE id = %s
     """, (id,))
 
     conn.commit()
@@ -2515,8 +2528,7 @@ def alertas():
     from datetime import datetime, timedelta
     import sqlite3
 
-    conn = sqlite3.connect('empresa.db')
-    conn.row_factory = sqlite3.Row
+    conn = get_connection()
     cursor = conn.cursor()
 
     hoy = datetime.today().date()
@@ -2527,7 +2539,7 @@ def alertas():
         SELECT nombre, licencia_vencimiento AS fecha
         FROM conductores
         WHERE licencia_vencimiento IS NOT NULL
-        AND date(licencia_vencimiento) <= ?
+        AND date(licencia_vencimiento) <= %s
         ORDER BY licencia_vencimiento
     """, (limite,))
     licencias_raw = cursor.fetchall()
@@ -2543,25 +2555,25 @@ def alertas():
     cursor.execute("""
         SELECT patente, 'VTV' as tipo, vtv as fecha
         FROM vehiculos
-        WHERE vtv IS NOT NULL AND date(vtv) <= ?
+        WHERE vtv IS NOT NULL AND date(vtv) <= %s
 
         UNION ALL
 
         SELECT patente, 'REMIS', remis
         FROM vehiculos
-        WHERE remis IS NOT NULL AND date(remis) <= ?
+        WHERE remis IS NOT NULL AND date(remis) <= %s
 
         UNION ALL
 
         SELECT patente, 'GNC', gnc
         FROM vehiculos
-        WHERE gnc IS NOT NULL AND date(gnc) <= ?
+        WHERE gnc IS NOT NULL AND date(gnc) <= %s
 
         UNION ALL
 
         SELECT patente, 'TUBO', tubo
         FROM vehiculos
-        WHERE tubo IS NOT NULL AND date(tubo) <= ?
+        WHERE tubo IS NOT NULL AND date(tubo) <= %s
 
         ORDER BY fecha
     """, (limite, limite, limite, limite))
@@ -2580,7 +2592,7 @@ def alertas():
         SELECT numero, monto, fecha_vencimiento AS fecha
         FROM infracciones
         WHERE fecha_vencimiento IS NOT NULL
-        AND date(fecha_vencimiento) <= ?
+        AND date(fecha_vencimiento) <= %s
         ORDER BY fecha_vencimiento
     """, (limite,))
     infracciones_raw = cursor.fetchall()
@@ -2617,8 +2629,7 @@ def alertas_global():
     from datetime import datetime, timedelta
     import sqlite3
 
-    conn = sqlite3.connect('empresa.db')
-    conn.row_factory = sqlite3.Row
+    conn = get_connection()
     cursor = conn.cursor()
 
     hoy = datetime.today().date()
@@ -2629,17 +2640,17 @@ def alertas_global():
         SELECT COUNT(*) as total
         FROM conductores
         WHERE licencia_vencimiento IS NOT NULL
-        AND date(licencia_vencimiento) <= ?
+        AND date(licencia_vencimiento) <= %s
     """, (limite,))
     lic = cursor.fetchone()["total"]
 
     # vehículos (sumamos los 4 tipos)
     cursor.execute("""
         SELECT 
-            (SELECT COUNT(*) FROM vehiculos WHERE vtv IS NOT NULL AND date(vtv) <= ?) +
-            (SELECT COUNT(*) FROM vehiculos WHERE remis IS NOT NULL AND date(remis) <= ?) +
-            (SELECT COUNT(*) FROM vehiculos WHERE gnc IS NOT NULL AND date(gnc) <= ?) +
-            (SELECT COUNT(*) FROM vehiculos WHERE tubo IS NOT NULL AND date(tubo) <= ?) 
+            (SELECT COUNT(*) FROM vehiculos WHERE vtv IS NOT NULL AND date(vtv) <= %s) +
+            (SELECT COUNT(*) FROM vehiculos WHERE remis IS NOT NULL AND date(remis) <= %s) +
+            (SELECT COUNT(*) FROM vehiculos WHERE gnc IS NOT NULL AND date(gnc) <= %s) +
+            (SELECT COUNT(*) FROM vehiculos WHERE tubo IS NOT NULL AND date(tubo) <= %s) 
         AS total
     """, (limite, limite, limite, limite))
     veh = cursor.fetchone()["total"]
@@ -2649,7 +2660,7 @@ def alertas_global():
         SELECT COUNT(*) as total
         FROM infracciones
         WHERE fecha_vencimiento IS NOT NULL
-        AND date(fecha_vencimiento) <= ?
+        AND date(fecha_vencimiento) <= %s
     """, (limite,))
     inf = cursor.fetchone()["total"]
 
@@ -2662,7 +2673,7 @@ def alertas_global():
 @app.route("/")
 @login_requerido
 def dashboard():
-    conn = sqlite3.connect("empresa.db")
+    conn = get_connection()
     cursor = conn.cursor()
 
     # Total conductores
