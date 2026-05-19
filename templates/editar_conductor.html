@@ -8,13 +8,13 @@
 
     <form method="POST" enctype="multipart/form-data">
 
-        <input name="nombre" value="{{ conductor[1] }}">
+        <input name="nombre" value="{{ conductor.nombre }}">
         <label for="dni">DNI</label>
-        <input name="dni" value="{{ conductor[2] }}">
+        <input name="dni" value="{{ conductor.dni }}">
         <label for="licencia_vencimiento">Vto Lic.</label>
-        <input type="date" name="licencia_vencimiento" value="{{ conductor[3] }}">
+        <input type="date" name="licencia_vencimiento" value="{{ conductor.licencia_vencimiento }}">
         <label for="cbu">CBU</label>
-        <input name="cbu" value="{{ conductor[4] }}">
+        <input name="cbu" value="{{ conductor.cbu }}">
 
         <hr>
 
