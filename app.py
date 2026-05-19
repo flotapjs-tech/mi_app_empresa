@@ -438,61 +438,118 @@ def editar_conductor(id):
     carpeta = "static/uploads/"
 
     if request.method == "POST":
+
         nombre = request.form["nombre"]
         dni = request.form["dni"]
-        licencia_vencimiento = request.form["licencia_vencimiento"]
+        licencia_vencimiento = request.form["licencia_vencimiento"] or None
         cbu = request.form["cbu"]
 
-        # 👉 traer archivos actuales
+        # traer archivos actuales
         cursor.execute("""
-            SELECT licencia_frente, licencia_dorso, dni_frente, dni_dorso, contrato
-            FROM conductores WHERE id = %s
+            SELECT 
+                licencia_frente,
+                licencia_dorso,
+                dni_frente,
+                dni_dorso,
+                contrato
+            FROM conductores
+            WHERE id = %s
         """, (id,))
+
         actuales = cursor.fetchone()
 
         def reemplazar_archivo(nuevo, actual):
+
             if nuevo and nuevo.filename != "":
-                # borrar viejo
+
+                # borrar archivo viejo
                 if actual:
-                    ruta = os.path.join(carpeta, actual)
-                    if os.path.exists(ruta):
-                        os.remove(ruta)
+                    ruta_vieja = os.path.join(carpeta, actual)
+
+                    if os.path.exists(ruta_vieja):
+                        os.remove(ruta_vieja)
 
                 # guardar nuevo
                 nombre_archivo = secure_filename(nuevo.filename)
-                nuevo.save(os.path.join(carpeta, nombre_archivo))
+                ruta_nueva = os.path.join(carpeta, nombre_archivo)
+
+                nuevo.save(ruta_nueva)
+
                 return nombre_archivo
 
             return actual
 
-        licencia_frente = reemplazar_archivo(request.files["licencia_frente"], actuales[0])
-        licencia_dorso = reemplazar_archivo(request.files["licencia_dorso"], actuales[1])
-        dni_frente = reemplazar_archivo(request.files["dni_frente"], actuales[2])
-        dni_dorso = reemplazar_archivo(request.files["dni_dorso"], actuales[3])
-        contrato = reemplazar_archivo(request.files["contrato"], actuales[4])
+        licencia_frente = reemplazar_archivo(
+            request.files["licencia_frente"],
+            actuales["licencia_frente"]
+        )
+
+        licencia_dorso = reemplazar_archivo(
+            request.files["licencia_dorso"],
+            actuales["licencia_dorso"]
+        )
+
+        dni_frente = reemplazar_archivo(
+            request.files["dni_frente"],
+            actuales["dni_frente"]
+        )
+
+        dni_dorso = reemplazar_archivo(
+            request.files["dni_dorso"],
+            actuales["dni_dorso"]
+        )
+
+        contrato = reemplazar_archivo(
+            request.files["contrato"],
+            actuales["contrato"]
+        )
 
         cursor.execute("""
-            UPDATE conductores SET
-            nombre=%s, dni=%s, licencia_vencimiento=%s, cbu=%s,
-            licencia_frente=%s, licencia_dorso=%s,
-            dni_frente=%s, dni_dorso=%s, contrato=%s
-            WHERE id=%s
+            UPDATE conductores
+            SET
+                nombre = %s,
+                dni = %s,
+                licencia_vencimiento = %s,
+                cbu = %s,
+                licencia_frente = %s,
+                licencia_dorso = %s,
+                dni_frente = %s,
+                dni_dorso = %s,
+                contrato = %s
+            WHERE id = %s
         """, (
-            nombre, dni, licencia_vencimiento, cbu,
-            licencia_frente, licencia_dorso,
-            dni_frente, dni_dorso, contrato, id
+            nombre,
+            dni,
+            licencia_vencimiento,
+            cbu,
+            licencia_frente,
+            licencia_dorso,
+            dni_frente,
+            dni_dorso,
+            contrato,
+            id
         ))
 
         conn.commit()
         conn.close()
+
         return redirect("/conductores")
 
-    cursor.execute("SELECT * FROM conductores WHERE id = %s", (id,))
+    # GET
+    cursor.execute("""
+        SELECT *
+        FROM conductores
+        WHERE id = %s
+    """, (id,))
+
     conductor = cursor.fetchone()
 
     conn.close()
 
-    return render_template("editar_conductor.html", conductor=conductor)
+    return render_template(
+        "editar_conductor.html",
+        conductor=conductor
+    )
 
 @app.route('/asignaciones', methods=['GET', 'POST'])
 @login_requerido
@@ -1278,240 +1335,8 @@ def infracciones():
         modo=modo
    )
 
-'''@app.route('/importar_infracciones', methods=['POST'])
-@login_requerido
-def importar_infracciones():
 
-    conn = get_connection()
-    cursor = conn.cursor()
 
-    texto = request.form['texto']
-    vehiculo_id = int(request.form['vehiculo_id'])
-    jurisdiccion = request.form['jurisdiccion']
-
-    lineas = [
-        l.strip()
-        for l in texto.split("\n")
-        if l.strip()
-    ]
-
-    nuevas = 0
-    duplicadas = 0
-    errores = 0
-    controlador = 0
-
-    # =========================
-    # TRAER DUPLICADOS UNA SOLA VEZ
-    # =========================
-    cursor.execute("""
-        SELECT numero
-        FROM infracciones
-    """)
-
-    numeros_existentes = {
-        row["numero"]
-        for row in cursor.fetchall()
-    }
-
-    # =========================
-    # CACHE DE ASIGNACIONES
-    # =========================
-    cache_asignaciones = {}
-
-    i = 0
-
-    while i < len(lineas):
-
-        try:
-
-            linea1 = lineas[i]
-
-            # =========================
-            # NUMERO + FECHA + HORA
-            # =========================
-            match = re.search(
-                r'Acta N[°º]([A-Z0-9]+)\s*-\s*(\d{4}-\d{2}-\d{2})\s*(\d{2}:\d{2})',
-                linea1
-            )
-
-            if not match:
-                i += 1
-                continue
-
-            numero = match.group(1)
-            fecha = match.group(2)
-            hora = match.group(3)
-
-            # =========================
-            # DUPLICADOS
-            # =========================
-            if numero in numeros_existentes:
-
-                duplicadas += 1
-                i += 3
-                continue
-
-            # =========================
-            # MONTO + VENCIMIENTO
-            # =========================
-            # =========================
-            monto = None
-            fecha_vencimiento = None
-            estado = "normal"
-
-            j = i + 1
-
-            while j < len(lineas):
-
-                texto_linea = lineas[j].lower()
-
-                # 🔴 CONTROLADOR
-                if "controlador" in texto_linea:
-
-                    estado = "controlador"
-                    controlador += 1
-                    break
-
-                # 💲 MONTO
-                if "$" in lineas[j]:
-
-                    # 🟢 NORMAL
-                    m2 = re.search(
-                        r'\$[\d\.,]+\s+\$([\d\.,]+).*%s(\d{2}-\d{2}-\d{4})',
-                        lineas[j]
-                    )
-
-                    if m2:
-
-                        monto = (
-                            m2.group(1)
-                            .replace('.', '')
-                            .replace(',', '.')
-                        )
-
-                        fecha_vencimiento = datetime.strptime(
-                            m2.group(2),
-                            "%d-%m-%Y"
-                        ).date()
-
-                        estado = "normal"
-
-                        break
-
-                    # 🔴 VENCIDA
-                    m3 = re.search(
-                        r'\$([\d\.,]+)',
-                        lineas[j]
-                    )
-
-                    if m3:
-
-                        monto = (
-                            m3.group(1)
-                            .replace('.', '')
-                            .replace(',', '.')
-                        )
-
-                        estado = "vencida"
-
-                        break
-
-                j += 1
-
-            # =========================
-            # TURNO + FECHA REAL
-            # =========================
-            turno, fecha_busqueda = obtener_turno_y_fecha(
-                fecha,
-                hora
-            )
-
-            # =========================
-            # CACHE KEY
-            # =========================
-            clave = (
-                vehiculo_id,
-                fecha_busqueda,
-                turno
-            )
-
-            # =========================
-            # BUSCAR CONDUCTOR
-            # =========================
-            if clave not in cache_asignaciones:
-
-                cursor.execute("""
-                    SELECT conductor_id
-                    FROM asignaciones
-                    WHERE vehiculo_id = %s
-                    AND fecha = %s
-                    AND turno = %s
-                """, clave)
-
-                res = cursor.fetchone()
-
-                cache_asignaciones[clave] = (
-                    res["conductor_id"]
-                    if res else None
-                )
-
-            conductor_id = cache_asignaciones[clave]
-
-            # =========================
-            # INSERT
-            # =========================
-            cursor.execute("""
-                INSERT INTO infracciones
-                (
-                    numero,
-                    vehiculo_id,
-                    conductor_id,
-                    fecha,
-                    hora,
-                    jurisdiccion,
-                    monto,
-                    fecha_vencimiento,
-                    estado
-                )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
-                numero,
-                vehiculo_id,
-                conductor_id,
-                fecha,
-                hora,
-                jurisdiccion,
-                monto,
-                fecha_vencimiento,
-                estado
-            ))
-
-            numeros_existentes.add(numero)
-
-            nuevas += 1
-            i += 3
-
-        except Exception as e:
-
-            print("ERROR IMPORTANDO:", e)
-
-            errores += 1
-            i += 1
-
-    conn.commit()
-    conn.close()
-
-    flash(
-        f"""
-        Importadas: {nuevas}
-        | Duplicadas: {duplicadas}
-        | Errores: {errores}
-        | Controlador: {controlador}
-        """
-    )
-
-    return redirect(url_for('infracciones'))
-'''
 @app.route('/infracciones_resumen')
 @login_requerido
 def infracciones_resumen():
@@ -1536,293 +1361,7 @@ def infracciones_resumen():
 
     return render_template("infracciones_resumen.html", resumen=resumen)
 
-'''@app.route('/importar_infracciones', methods=['POST'])
-@login_requerido
-def importar_infracciones():
 
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    texto = request.form['texto']
-    vehiculo_id = int(request.form['vehiculo_id'])
-    jurisdiccion = request.form['jurisdiccion']
-
-    bloques = texto.split("Esta es la foto de la infracción:")
-
-    nuevas = 0
-    duplicadas = 0
-    errores = 0
-    controlador = 0
-
-    asignadas_por_conductor = {}
-
-    for bloque in bloques:
-
-        try:
-
-            bloque = bloque.strip()
-
-            # =========================
-            # NÚMERO DE ACTA (opcional)
-            # =========================
-            acta = re.search(
-                r'Acta\s*N[°º]%s\s*([A-Z0-9\-]+)',
-                bloque,
-                re.IGNORECASE
-            )
-            numero = None
-
-            if acta:
-                numero = (
-                    acta.group(1)
-                    .strip()
-                    .replace("-", "")
-                )
-
-            numero = acta.group(1) if acta else None
-
-            if not bloque:
-                continue
-
-            # =========================
-            # FECHA Y HORA
-            # =========================
-
-            fecha = None
-            hora = None
-
-            # FORMATO NUEVO
-            nuevo = re.search(
-                r'(\d{2}-\d{2}-\d{4})\s+a las\s+(\d{2}:\d{2})',
-                bloque
-            )
-
-            if nuevo:
-
-                fecha = datetime.strptime(
-                    nuevo.group(1),
-                    "%d-%m-%Y"
-                ).date().isoformat()
-
-                hora = nuevo.group(2)
-
-            else:
-
-                # FORMATO VIEJO
-                viejo = re.search(
-                    r'(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})',
-                    bloque
-                )
-
-                if viejo:
-
-                    fecha = viejo.group(1)
-                    hora = viejo.group(2)
-
-            if not fecha or not hora:
-
-                errores += 1
-                continue
-            
-            # =========================
-            # CONTROLADOR
-            # =========================
-            if "controlador" in bloque.lower():
-
-                monto = None
-                fecha_vencimiento = None
-                estado = "controlador"
-
-                controlador += 1
-
-            else:
-
-                # =========================
-                # DESCUENTO + VENCIMIENTO
-                # =========================
-                descuento = re.search(
-                    r'\\$([\d\.\,]+).%shasta el (\d{2}-\d{2}-\d{4})',
-                    bloque,
-                    re.IGNORECASE | re.DOTALL
-                )
-
-                if descuento:
-
-                    monto = (
-                        descuento.group(1)
-                        .replace('.', '')
-                        .replace(',', '.')
-                    )
-
-                    fecha_vencimiento = datetime.strptime(
-                        descuento.group(2),
-                        "%d-%m-%Y"
-                    ).date()
-
-                    estado = "normal"
-
-                else:
-
-                    # =========================
-                    # BUSCAR CUALQUIER MONTO
-                    # =========================
-                    montos = re.findall(
-                        r'\$([\d\.\,]+)',
-                        bloque
-                    )
-
-                    if montos:
-
-                        monto = (
-                            montos[-1]
-                            .replace('.', '')
-                            .replace(',', '.')
-                        )
-
-                        fecha_vencimiento = None
-                        estado = "vencida"
-
-                    else:
-
-                        errores += 1
-                        continue
-
-            # =========================
-            # HASH ÚNICO
-            # =========================
-            texto_hash = f"""
-                {numero}
-                {vehiculo_id}
-                {fecha}
-                {hora}
-                {monto}
-            """
-
-            hash_unico = hashlib.md5(
-                texto_hash.encode()
-            ).hexdigest()
-
-            # =========================
-            # DUPLICADOS
-            # =========================
-            if numero:
-
-                cursor.execute("""
-                    SELECT 1
-                    FROM infracciones
-                    WHERE numero = %s
-                    LIMIT 1""", (numero,))
-
-            else:    
-                
-                cursor.execute("""
-                    SELECT 1
-                    FROM infracciones
-                    WHERE hash_unico = %s
-                    LIMIT 1
-                """, (hash_unico,))
-
-            if cursor.fetchone():
-
-                duplicadas += 1
-                continue
-
-            # =========================
-            # ASIGNACIÓN AUTOMÁTICA
-            # =========================
-            conductor_id = buscar_conductor_automatico(
-                cursor,
-                vehiculo_id,
-                fecha,
-                hora
-            )
-
-            # =========================
-            # INSERT
-            # =========================
-
-
-            cursor.execute("""
-                INSERT INTO infracciones
-                (
-                    numero,
-                    hash_unico,
-                    vehiculo_id,
-                    conductor_id,
-                    fecha,
-                    hora,
-                    jurisdiccion,
-                    monto,
-                    fecha_vencimiento,
-                    estado,
-                    fecha_carga
-                )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
-                numero,
-                hash_unico,
-                vehiculo_id,
-                conductor_id,
-                fecha,
-                hora,
-                jurisdiccion,
-                monto,
-                fecha_vencimiento,
-                estado,
-                datetime.now().isoformat()
-            ))
-
-            nuevas += 1
-
-            # =========================
-            # RESUMEN POR CONDUCTOR
-            # =========================
-            if conductor_id:
-
-                cursor.execute("""
-                    SELECT nombre
-                    FROM conductores
-                    WHERE id = %s
-                """, (conductor_id,))
-
-                conductor = cursor.fetchone()
-
-                nombre = conductor["nombre"]
-
-            else:
-                nombre = "Sin asignar"
-
-            asignadas_por_conductor[nombre] = (
-                asignadas_por_conductor.get(nombre, 0) + 1
-            )
-
-        except:
-            errores += 1
-
-    conn.commit()
-    conn.close()
-
-    # =========================
-    # FLASH FINAL
-    # =========================
-    detalle = " | ".join([
-        f"{k}: {v}"
-        for k, v in asignadas_por_conductor.items()
-    ])
-
-    flash(
-        f"""
-        Importadas: {nuevas}
-        | Duplicadas: {duplicadas}
-        | Errores: {errores}
-        | Controlador: {controlador}
-
-        | {detalle}
-        """
-    )
-
-    return redirect(url_for('infracciones'))
-'''
 
 @app.route('/importar_infracciones', methods=['POST'])
 @login_requerido
@@ -1839,28 +1378,25 @@ def importar_infracciones():
     # SEPARAR BLOQUES
     # =========================
 
-    # 🔹 FORMATO NUEVO
     if "📄" in texto:
 
         bloques = re.findall(
-            r'(📄.*%s)(%s=📄|\Z)',
+            r'(📄.*?)(?=📄|\Z)',
             texto,
             re.DOTALL
         )
 
-    # 🔹 FORMATO VIEJO
     else:
 
         bloques = re.split(
-            r'(%s=Acta N[°º])',
+            r'(?=Acta N[°º])',
             texto
         )
 
     bloques = [
         b.strip()
         for b in bloques
-        if b.strip()
-        and "Acta N" in b
+        if b.strip() and "Acta N" in b
     ]
 
     nuevas = 0
@@ -1873,6 +1409,7 @@ def importar_infracciones():
     # =========================
     # CACHE DUPLICADOS
     # =========================
+
     cursor.execute("""
         SELECT numero, hash_unico
         FROM infracciones
@@ -1895,11 +1432,13 @@ def importar_infracciones():
     # =========================
     # CACHE ASIGNACIONES
     # =========================
+
     cache_asignaciones = {}
 
     # =========================
     # RECORRER BLOQUES
     # =========================
+
     for bloque in bloques:
 
         try:
@@ -1910,10 +1449,11 @@ def importar_infracciones():
                 continue
 
             # =========================
-            # NUMERO ACTA (OPCIONAL)
+            # NUMERO ACTA
             # =========================
+
             acta = re.search(
-                r'Acta\s*N[°º]%s\s*([A-Z0-9\-]+)',
+                r'Acta\s*N[°º]\s*([A-Z0-9\-]+)',
                 bloque,
                 re.IGNORECASE
             )
@@ -1931,13 +1471,10 @@ def importar_infracciones():
             # =========================
             # FECHA Y HORA
             # =========================
+
             fecha = None
             hora = None
 
-            # =========================
-            # FORMATO NUEVO
-            # 03-04-2026 a las 05:07
-            # =========================
             nuevo = re.search(
                 r'(\d{2}-\d{2}-\d{4})\s+a las\s+(\d{2}:\d{2})',
                 bloque,
@@ -1949,16 +1486,12 @@ def importar_infracciones():
                 fecha = datetime.strptime(
                     nuevo.group(1),
                     "%d-%m-%Y"
-                ).date().isoformat()
+                ).date()
 
                 hora = nuevo.group(2)
 
             else:
 
-                # =========================
-                # FORMATO VIEJO
-                # 2025-04-03 05:07
-                # =========================
                 viejo = re.search(
                     r'(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})',
                     bloque,
@@ -1967,12 +1500,13 @@ def importar_infracciones():
 
                 if viejo:
 
-                    fecha = viejo.group(1).strip()
+                    fecha = datetime.strptime(
+                        viejo.group(1),
+                        "%Y-%m-%d"
+                    ).date()
+
                     hora = viejo.group(2).strip()
 
-            # =========================
-            # VALIDAR
-            # =========================
             if not fecha or not hora:
 
                 print("NO SE PUDO PARSEAR FECHA:")
@@ -1984,6 +1518,7 @@ def importar_infracciones():
             # =========================
             # CONTROLADOR
             # =========================
+
             if "controlador" in bloque.lower():
 
                 monto = None
@@ -1994,18 +1529,15 @@ def importar_infracciones():
 
             else:
 
-                # =========================
-                # DESCUENTO + VENCIMIENTO
-                # =========================
                 descuento = re.search(
-                    r'\$([\d\.\,]+).*%shasta el (\d{2}-\d{2}-\d{4})',
+                    r'\$([\d\.\,]+).*?hasta el (\d{2}-\d{2}-\d{4})',
                     bloque,
                     re.IGNORECASE | re.DOTALL
                 )
 
                 if descuento:
 
-                    monto = (
+                    monto = float(
                         descuento.group(1)
                         .replace('.', '')
                         .replace(',', '.')
@@ -2020,9 +1552,6 @@ def importar_infracciones():
 
                 else:
 
-                    # =========================
-                    # MONTO VENCIDA
-                    # =========================
                     montos = re.findall(
                         r'\$([\d\.\,]+)',
                         bloque
@@ -2030,7 +1559,7 @@ def importar_infracciones():
 
                     if montos:
 
-                        monto = (
+                        monto = float(
                             montos[-1]
                             .replace('.', '')
                             .replace(',', '.')
@@ -2047,6 +1576,7 @@ def importar_infracciones():
             # =========================
             # HASH UNICO
             # =========================
+
             texto_hash = f"""
                 {numero}
                 {vehiculo_id}
@@ -2062,6 +1592,7 @@ def importar_infracciones():
             # =========================
             # DUPLICADOS
             # =========================
+
             if numero:
 
                 if numero in numeros_existentes:
@@ -2079,14 +1610,12 @@ def importar_infracciones():
             # =========================
             # TURNO + FECHA BUSQUEDA
             # =========================
+
             turno, fecha_busqueda = obtener_turno_y_fecha(
-                fecha,
+                fecha.isoformat(),
                 hora
             )
 
-            # =========================
-            # CACHE KEY
-            # =========================
             clave = (
                 vehiculo_id,
                 fecha_busqueda,
@@ -2096,6 +1625,7 @@ def importar_infracciones():
             # =========================
             # BUSCAR CONDUCTOR
             # =========================
+
             if clave not in cache_asignaciones:
 
                 cursor.execute("""
@@ -2118,6 +1648,7 @@ def importar_infracciones():
             # =========================
             # INSERT
             # =========================
+
             cursor.execute("""
                 INSERT INTO infracciones
                 (
@@ -2133,7 +1664,7 @@ def importar_infracciones():
                     estado,
                     fecha_carga
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
             """, (
                 numero,
                 hash_unico,
@@ -2144,13 +1675,13 @@ def importar_infracciones():
                 jurisdiccion,
                 monto,
                 fecha_vencimiento,
-                estado,
-                datetime.now().isoformat()
+                estado
             ))
 
             # =========================
             # ACTUALIZAR CACHE
             # =========================
+
             if numero:
                 numeros_existentes.add(numero)
 
@@ -2161,6 +1692,7 @@ def importar_infracciones():
             # =========================
             # RESUMEN CONDUCTOR
             # =========================
+
             if conductor_id:
 
                 cursor.execute("""
@@ -2194,17 +1726,11 @@ def importar_infracciones():
     conn.commit()
     conn.close()
 
-    # =========================
-    # DETALLE FINAL
-    # =========================
     detalle = " | ".join([
         f"{k}: {v}"
         for k, v in asignadas_por_conductor.items()
     ])
 
-    # =========================
-    # FLASH
-    # =========================
     flash(
         f"""
         Importadas: {nuevas}
@@ -2241,19 +1767,28 @@ def infracciones_conductor(conductor_id):
 
     conductor = None
 
+    # =========================
+    # TRAER CONDUCTOR
+    # =========================
+
     if conductor_id != 0:
 
         cursor.execute("""
-            SELECT nombre FROM conductores 
-            WHERE id = %s""", (conductor_id,))
+            SELECT nombre
+            FROM conductores
+            WHERE id = %s
+        """, (conductor_id,))
+
         conductor = cursor.fetchone()
 
+    # =========================
+    # SIN ASIGNAR
+    # =========================
 
-    # 🔹 CASO SIN ASIGNAR
     if conductor_id == 0:
 
         cursor.execute("""
-            SELECT 
+            SELECT
                 i.id,
                 i.fecha,
                 i.hora,
@@ -2264,18 +1799,22 @@ def infracciones_conductor(conductor_id):
                 i.numero,
                 i.vehiculo_id
             FROM infracciones i
-            JOIN vehiculos v ON i.vehiculo_id = v.id
+            JOIN vehiculos v
+                ON i.vehiculo_id = v.id
             WHERE i.conductor_id IS NULL
             ORDER BY i.fecha DESC, i.hora DESC
         """)
 
         nombre = "Sin asignar"
 
-    # 🔹 CASO NORMAL
+    # =========================
+    # CONDUCTOR NORMAL
+    # =========================
+
     else:
 
         cursor.execute("""
-            SELECT 
+            SELECT
                 i.id,
                 i.fecha,
                 i.hora,
@@ -2286,7 +1825,8 @@ def infracciones_conductor(conductor_id):
                 i.numero,
                 i.vehiculo_id
             FROM infracciones i
-            JOIN vehiculos v ON i.vehiculo_id = v.id
+            JOIN vehiculos v
+                ON i.vehiculo_id = v.id
             WHERE i.conductor_id = %s
             ORDER BY i.fecha DESC, i.hora DESC
         """, (conductor_id,))
@@ -2297,60 +1837,73 @@ def infracciones_conductor(conductor_id):
 
     infracciones_final = []
 
+    # =========================
+    # RECORRER INFRACCIONES
+    # =========================
+
     for i in infracciones:
 
         i = dict(i)
 
+        # =========================
+        # SOLO PARA SIN ASIGNAR
+        # =========================
+
         if conductor_id == 0:
 
-            # 🔹 turno real de la infracción
             turno, fecha_busqueda = obtener_turno_y_fecha(
-                i["fecha"],
+                str(i["fecha"]),
                 i["hora"]
             )
 
-            fecha_obj = datetime.strptime(
-                fecha_busqueda,
-                "%Y-%m-%d"
-            ).date()
+            # fecha ya viene como date en postgres
+            if isinstance(fecha_busqueda, str):
+
+                fecha_obj = datetime.strptime(
+                    fecha_busqueda,
+                    "%Y-%m-%d"
+                ).date()
+
+            else:
+
+                fecha_obj = fecha_busqueda
 
             # =========================
-            # INFRACCIÓN EN TURNO DÍA
+            # TURNO DIA
             # =========================
+
             if turno == "dia":
 
-                # anterior = noche día anterior
                 fecha_anterior = (
                     fecha_obj - timedelta(days=1)
-                ).isoformat()
+                )
 
                 turno_anterior = "noche"
 
-                # siguiente = noche mismo día
-                fecha_siguiente = fecha_obj.isoformat()
+                fecha_siguiente = fecha_obj
 
                 turno_siguiente = "noche"
 
             # =========================
-            # INFRACCIÓN EN TURNO NOCHE
+            # TURNO NOCHE
             # =========================
+
             else:
 
-                # anterior = día mismo día
-                fecha_anterior = fecha_obj.isoformat()
+                fecha_anterior = fecha_obj
 
                 turno_anterior = "dia"
 
-                # siguiente = día día siguiente
                 fecha_siguiente = (
                     fecha_obj + timedelta(days=1)
-                ).isoformat()
+                )
 
                 turno_siguiente = "dia"
 
             # =========================
             # BUSCAR ANTERIOR
             # =========================
+
             cursor.execute("""
                 SELECT c.nombre
                 FROM asignaciones a
@@ -2370,6 +1923,7 @@ def infracciones_conductor(conductor_id):
             # =========================
             # BUSCAR SIGUIENTE
             # =========================
+
             cursor.execute("""
                 SELECT c.nombre
                 FROM asignaciones a
@@ -2388,14 +1942,19 @@ def infracciones_conductor(conductor_id):
 
             i["anterior"] = ant["nombre"] if ant else "-"
             i["siguiente"] = sig["nombre"] if sig else "-"
-        
+
         infracciones_final.append(i)
+
+    # =========================
+    # LISTA CONDUCTORES
+    # =========================
 
     cursor.execute("""
         SELECT id, nombre
         FROM conductores
-        ORDER BY nombre    
-""")
+        ORDER BY nombre
+    """)
+
     conductores = cursor.fetchall()
 
     conn.close()
