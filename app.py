@@ -878,18 +878,83 @@ def guardar_adelanto():
 
     return redirect('/adelantos')
 
-@app.route('/eliminar_adelanto/<int:id>', methods=['POST'])
+@app.route("/eliminar_adelanto/<int:id>")
 @login_requerido
 def eliminar_adelanto(id):
+
     conn = get_connection()
     cursor = conn.cursor()
 
-    
-    cursor.execute("DELETE FROM adelantos WHERE id = %s", (id,))
+    cursor.execute("""
+        DELETE FROM adelantos
+        WHERE id = %s
+    """, (id,))
+
     conn.commit()
     conn.close()
 
-    return redirect('/adelantos')
+    flash("Adelanto eliminado")
+    return redirect(url_for("adelantos"))
+
+@app.route("/editar_adelanto/<int:id>", methods=["GET", "POST"])
+@login_requerido
+def editar_adelanto(id):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    if request.method == "POST":
+
+        conductor_id = request.form["conductor_id"]
+        monto = request.form["monto"]
+        fecha = request.form["fecha"]
+        descripcion = request.form["descripcion"]
+
+        cursor.execute("""
+            UPDATE adelantos
+            SET conductor_id=%s,
+                monto=%s,
+                fecha=%s,
+                descripcion=%s
+            WHERE id=%s
+        """, (
+            conductor_id,
+            monto,
+            fecha,
+            descripcion,
+            id
+        ))
+
+        conn.commit()
+        conn.close()
+
+        flash("Adelanto editado correctamente")
+        return redirect(url_for("adelantos"))
+
+    # GET
+    cursor.execute("""
+        SELECT *
+        FROM adelantos
+        WHERE id = %s
+    """, (id,))
+
+    adelanto = cursor.fetchone()
+
+    cursor.execute("""
+        SELECT id, nombre
+        FROM conductores
+        ORDER BY nombre
+    """)
+
+    conductores = cursor.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "editar_adelanto.html",
+        adelanto=adelanto,
+        conductores=conductores
+    )
 
 @app.route("/vehiculos", methods=["GET", "POST"])
 @login_requerido

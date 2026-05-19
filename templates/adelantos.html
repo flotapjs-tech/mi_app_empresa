@@ -72,6 +72,17 @@
         <td>{{ r.nombre }}</td>
         <td>{{ r.cantidad }}</td>
         <td>${{ r.total }}</td>
+        <td>
+            <a href="/editar_adelanto/{{ a.id }}">
+                ✏️
+            </a>
+        </td>
+        <td>
+            <a href="/eliminar_adelanto/{{ a.id }}"
+            onclick="return confirm('¿Eliminar adelanto?')">
+                🗑️
+            </a>
+        </td>
     </tr>
     {% endfor %}
 </table>
