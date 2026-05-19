@@ -65,8 +65,6 @@
         <th>Conductor</th>
         <th>Cantidad</th>
         <th>Total</th>
-        <th>Editar</th>
-        <th>Eliminar</th>
     </tr>
 
     {% for r in resumen_conductores %}
@@ -74,19 +72,11 @@
         <td>{{ r.nombre }}</td>
         <td>{{ r.cantidad }}</td>
         <td>${{ r.total }}</td>
-        <td>
-            <a href="/editar_adelanto/{{ a.id }}">
-                ✏️
-            </a>
-        </td>
-        <td>
-            <a href="/eliminar_adelanto/{{ a.id }}"
-            onclick="return confirm('¿Eliminar adelanto?')">
-                🗑️
-            </a>
-        </td>
     </tr>
     {% endfor %}
+
+</table>
+{% endif %}
 </table>
 {% endif %}
 <h4>Total busqueda: ${{ total }}</h4>
@@ -120,12 +110,23 @@
         <td>{{ a.conductor }}</td>
         <td>{{ a.monto }}</td>
         <td>
-            <form action="{{ url_for('eliminar_adelanto', id=a.id) }}" method="POST" style="display:inline;">
-                <button onclick="return confirm('¿Eliminar adelanto%s')">
-                    🗑️
-                </button>
-            </form>
-        </td>
+    <a href="{{ url_for('editar_adelanto', id=a.id) }}">
+        ✏️
+    </a>
+</td>
+
+<td>
+    <form action="{{ url_for('eliminar_adelanto', id=a.id) }}"
+          method="POST"
+          style="display:inline;">
+
+        <button type="submit"
+                onclick="return confirm('¿Eliminar adelanto?')">
+            🗑️
+        </button>
+
+    </form>
+</td>
         {% endif %}
     </tr>
     {% endfor %}
