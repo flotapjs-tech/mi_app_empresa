@@ -355,32 +355,43 @@ def conductores():
     datos_procesados = []
 
     for d in datos:
+
         alerta = ""
 
-        if d[3]:
-            fecha_vto = datetime.strptime(d[3], "%Y-%m-%d")
-            hoy = datetime.now()
+        if d["licencia_vencimiento"]:
+
+            fecha_vto = d["licencia_vencimiento"]
+
+            # si viene como string
+            if isinstance(fecha_vto, str):
+                fecha_vto = datetime.strptime(fecha_vto, "%Y-%m-%d")
+
+            hoy = datetime.now().date()
 
             if fecha_vto < hoy:
                 alerta = "vencido"
+
             elif fecha_vto <= hoy + timedelta(days=30):
                 alerta = "por_vencer"
 
         datos_procesados.append({
-            "id": d[0],
-            "nombre": d[1],
-            "dni": d[2],
-            "vto": d[3],
-            "cbu": d[4],
-            "lic_frente": d[5],
-            "lic_dorso": d[6],
-            "dni_frente": d[7],
-            "dni_dorso": d[8],
-            "contrato": d[9],
+            "id": d["id"],
+            "nombre": d["nombre"],
+            "dni": d["dni"],
+            "vto": d["licencia_vencimiento"],
+            "cbu": d["cbu"],
+            "lic_frente": d["licencia_frente"],
+            "lic_dorso": d["licencia_dorso"],
+            "dni_frente": d["dni_frente"],
+            "dni_dorso": d["dni_dorso"],
+            "contrato": d["contrato"],
             "alerta": alerta
         })
 
-    return render_template("conductores.html", datos=datos_procesados)
+    return render_template(
+        "conductores.html",
+        datos=datos_procesados
+    )
 
 
 
