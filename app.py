@@ -1998,8 +1998,8 @@ def infracciones_conductor(conductor_id):
                 JOIN conductores c
                     ON a.conductor_id = c.id
                 WHERE a.vehiculo_id = %s
-                AND a.fecha = %s
-                AND a.turno = %s
+                AND a.fecha::date = %s
+                AND a.turno::date = %s
             """, (
                 i["vehiculo_id"],
                 fecha_anterior,
@@ -2018,8 +2018,8 @@ def infracciones_conductor(conductor_id):
                 JOIN conductores c
                     ON a.conductor_id = c.id
                 WHERE a.vehiculo_id = %s
-                AND a.fecha = %s
-                AND a.turno = %s
+                AND a.fecha::date = %s
+                AND a.turno::date = %s
             """, (
                 i["vehiculo_id"],
                 fecha_siguiente,
