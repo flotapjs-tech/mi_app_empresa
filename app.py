@@ -1107,7 +1107,7 @@ def editar_vehiculo(id):
     return render_template('editar_vehiculo.html', vehiculo=vehiculo)
 
 
-@app.route('/eliminar_vehiculo/<int:id>')
+@app.route('/eliminar_vehiculo/<int:id>', methods=['POST'])
 @login_requerido
 def eliminar_vehiculo(id):
 
