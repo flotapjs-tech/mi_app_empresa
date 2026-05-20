@@ -2064,64 +2064,39 @@ def infracciones_asignadas():
     cursor = conn.cursor()
 
     cursor.execute("""
-    SELECT
+        SELECT
 
-        COALESCE(c.id, 0) as conductor_id,
+            COALESCE(c.id, 0) AS conductor_id,
+            COALESCE(c.nombre, 'Sin asignar') AS nombre,
 
-        COALESCE(
-            c.nombre,
-            'Sin asignar'
-        ) as nombre,
+            COUNT(i.id) AS total_infracciones,
 
-        COUNT(i.id) as total_infracciones,
+            COUNT(*) FILTER (WHERE i.pagada = 1) AS total_pagadas,
 
-        COUNT(
-            CASE
-                WHEN i.pagada = 1
-                THEN 1
-            END
-        ) as total_pagadas,
+            COUNT(*) FILTER (WHERE i.pagada = 0 OR i.pagada IS NULL) AS total_pendientes,
 
-        COUNT(
-            CASE
-                WHEN i.pagada = 0
-                     OR i.pagada IS NULL
-                THEN 1
-            END
-        ) as total_pendientes,
+            COALESCE(
+                SUM(i.monto::numeric) FILTER (
+                    WHERE i.pagada = 0 OR i.pagada IS NULL
+                ),
+                0
+            ) AS monto_pendiente,
 
-        SUM(
-            CASE
-                WHEN i.pagada = 0
-                     OR i.pagada IS NULL
-                THEN CAST(i.monto as REAL)
+            COALESCE(
+                SUM(i.monto::numeric),
+                0
+            ) AS monto_total,
 
-                ELSE 0
-            END
-        ) as monto_pendiente,
-
-        SUM(
-            CAST(i.monto as REAL)
-        ) as monto_total,
-
-        -- 🔥 NUEVAS
-        SUM(
-            CASE
-                CASE 
-                WHEN i.fecha_carga::timestamp >= NOW() - INTERVAL '2 hours'
-
-                THEN 1
-
-                ELSE 0
-            END
-        ) as nuevas
+            COUNT(*) FILTER (
+                WHERE i.fecha_carga::timestamp >= NOW() - INTERVAL '2 hours'
+            ) AS nuevas
 
         FROM infracciones i
 
         LEFT JOIN conductores c
             ON i.conductor_id = c.id
 
-        GROUP BY COALESCE(c.id, 0)
+        GROUP BY c.id, c.nombre
 
         ORDER BY nuevas DESC,
                 total_pendientes DESC
