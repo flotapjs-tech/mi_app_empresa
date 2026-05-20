@@ -910,17 +910,18 @@ def editar_adelanto(id):
         conductor_id = request.form["conductor_id"]
         monto = request.form["monto"]
         fecha = request.form["fecha"]
+        
 
         cursor.execute("""
             UPDATE adelantos
             SET conductor_id=%s,
                 monto=%s,
-                fecha=%s,
+                fecha=%s               
             WHERE id=%s
         """, (
             conductor_id,
             monto,
-            fecha,   
+            fecha,
             id
         ))
 
