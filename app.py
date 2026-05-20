@@ -407,7 +407,26 @@ def eliminar_conductor(id):
     conn = get_connection()
     cursor = conn.cursor()
 
-    # 👉 traer archivos antes de borrar
+    # verificar si tiene infracciones asociadas
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM infracciones
+        WHERE conductor_id = %s
+    """, (id,))
+    
+    total = cursor.fetchone()[0]
+
+    # si tiene infracciones -> pedir confirmación
+    if total > 0:
+        conn.close()
+        flash(
+            f"No se puede eliminar porque este conductor tiene {total} infracciones asociadas. "
+            f"Si continúa, quedarán como 'Sin asignar'. ¿Desea eliminar de todos modos?",
+            "warning"
+        )
+        return redirect(url_for("conductores", confirmar_eliminar=id))
+
+    # si no tiene -> borrar normal
     cursor.execute("""
         SELECT licencia_frente, licencia_dorso, dni_frente, dni_dorso, contrato
         FROM conductores
@@ -415,10 +434,9 @@ def eliminar_conductor(id):
     """, (id,))
     
     archivos = cursor.fetchone()
-
     carpeta = "static/uploads/"
 
-    # 👉 borrar archivos del disco
+    # borrar archivos del disco
     if archivos:
         for archivo in archivos:
             if archivo:
@@ -426,10 +444,63 @@ def eliminar_conductor(id):
                 if os.path.exists(ruta):
                     os.remove(ruta)
 
-    # 👉 borrar de la DB
-    cursor.execute("DELETE FROM conductores WHERE id = %s", (id,))
+    # borrar conductor
+    cursor.execute("""
+        DELETE FROM conductores
+        WHERE id = %s
+    """, (id,))
+
     conn.commit()
     conn.close()
+
+    flash("Conductor eliminado correctamente", "success")
+    return redirect("/conductores")
+
+@app.route("/confirmar_eliminar_conductor/<int:id>")
+@login_requerido
+def confirmar_eliminar_conductor(id):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    # traer archivos antes de borrar
+    cursor.execute("""
+        SELECT licencia_frente, licencia_dorso, dni_frente, dni_dorso, contrato
+        FROM conductores
+        WHERE id = %s
+    """, (id,))
+    
+    archivos = cursor.fetchone()
+    carpeta = "static/uploads/"
+
+    # borrar archivos físicos
+    if archivos:
+        for archivo in archivos:
+            if archivo:
+                ruta = os.path.join(carpeta, archivo)
+                if os.path.exists(ruta):
+                    os.remove(ruta)
+
+    # dejar infracciones sin asignar
+    cursor.execute("""
+        UPDATE infracciones
+        SET conductor_id = NULL
+        WHERE conductor_id = %s
+    """, (id,))
+
+    # borrar conductor
+    cursor.execute("""
+        DELETE FROM conductores
+        WHERE id = %s
+    """, (id,))
+
+    conn.commit()
+    conn.close()
+
+    flash(
+        "Conductor eliminado. Las infracciones quedaron como 'Sin asignar'.",
+        "success"
+    )
 
     return redirect("/conductores")
 
