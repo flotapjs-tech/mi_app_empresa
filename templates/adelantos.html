@@ -79,8 +79,8 @@
 {% endif %}
 </table>
 {% endif %}
-<h4>Total busqueda: ${{ total }}</h4>
-<!-- 📊 TABLA -->
+<h4>Total búsqueda: ${{ total }}</h4>
+
 <table>
     <tr>
     {% if modo == "resumen" %}
@@ -91,47 +91,49 @@
         <th>Fecha</th>
         <th>Conductor</th>
         <th>Monto</th>
-        <th>Acciones</th>
+        <th>Editar</th>
+        <th>Eliminar</th>
     {% endif %}
-</tr>
+    </tr>
 
     {% for a in adelantos %}
     <tr>
+
         {% if modo == "resumen" %}
-        <td>
-            <a href="/adelantos%s conductor_id={{ a.conductor_id}}">
-                {{ a.conductor }}
-            </a>
+            <td>
+                <a href="/adelantos?conductor_id={{ a.conductor_id }}">
+                    {{ a.conductor }}
+                </a>
             </td>
-        <td>{{ a.cantidad }}</td>
-        <td>{{ a.total }}</td>
+            <td>{{ a.cantidad }}</td>
+            <td>${{ a.total }}</td>
+
         {% else %}
-        <td>{{ a.fecha }}</td>
-        <td>{{ a.conductor }}</td>
-        <td>{{ a.monto }}</td>
-        <td>
-    <a href="{{ url_for('editar_adelanto', id=a.id) }}">
-        ✏️
-    </a>
-</td>
+            <td>{{ a.fecha }}</td>
+            <td>{{ a.conductor }}</td>
+            <td>${{ a.monto }}</td>
 
-<td>
-    <form action="{{ url_for('eliminar_adelanto', id=a.id) }}"
-          method="POST"
-          style="display:inline;">
+            <td>
+                <a href="{{ url_for('editar_adelanto', id=a.id) }}">
+                    ✏️
+                </a>
+            </td>
 
-        <button type="submit"
-                onclick="return confirm('¿Eliminar adelanto?')">
-            🗑️
-        </button>
+            <td>
+                <form action="{{ url_for('eliminar_adelanto', id=a.id) }}"
+                      method="POST"
+                      style="display:inline;">
 
-    </form>
-</td>
+                    <button type="submit"
+                            onclick="return confirm('¿Eliminar adelanto?')">
+                        🗑️
+                    </button>
+                </form>
+            </td>
         {% endif %}
+
     </tr>
     {% endfor %}
-
 </table>
-
 
 {% endblock %}
