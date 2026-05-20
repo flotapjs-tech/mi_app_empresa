@@ -414,7 +414,8 @@ def eliminar_conductor(id):
         WHERE conductor_id = %s
     """, (id,))
     
-    total = cursor.fetchone()[0]
+    fila = cursor.fetchone()
+    total = fila["count"]
 
     # si tiene infracciones -> pedir confirmación
     if total > 0:
