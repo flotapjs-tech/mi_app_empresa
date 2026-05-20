@@ -2,65 +2,113 @@
 
 {% block content %}
 
-
-        <div><h2>Vehículos</h2>
-            <div style="margin-bottom: 15px;">
-                <a href="/gastos" class="btn">Ver Gastos</a>
-            </div>
-        </div>
-
-            <form style="padding-bottom: 30px;" method="POST">
-                <input size="6" name="auto" placeholder="Auto" required>
-                <input size="6" name="patente" placeholder="Patente" required>
-                <input size="6" name="modelo" placeholder="modelo año" required>
-                <label for="vtv">VTV</label>
-                <input type="date" name="vtv">
-                <label for="remis">remis</label>
-                <input type="date" name="remis">
-                <label for="gnc">gnc</label>
-                <input type="date" name="gnc">
-                <label for="tubo">tubo</label>
-                <input type="date" name="tubo">
-                <button>Guardar</button>
-            </form>
-
-            <table>
-                <tr>
-                    <th>Id</th>
-                    <th>Auto</th>
-                    <th>Patente</th>
-                    <th>modelo</th>
-                    <th>vtv</th>
-                    <th>Remis</th>
-                    <th>GNC</th>
-                    <th>Tubo</th>
-                    <th>Editar</th>
-                    <th>Eliminar</th>
-                </tr>
-
-            {% for v in vehiculos %}
-                <tr>
-                    <td>{{ v.id }}</td>
-                    <td>{{ v.auto }}</td>
-                    <td>{{ v.patente }}</td>
-                    <td>{{ v.modelo }}</td>
-                    <td>{{ v.vtv }}</td>
-                    <td>{{ v.remis }}</td>
-                    <td>{{ v.gnc }}</td>
-                    <td>{{ v.tubo }}</td>
-                    <td>
-                        <a href="{{ url_for('editar_vehiculo', id=v.id) }}">✏️</a>
-                    </td>
-                    <td>
-                        <form action="{{ url_for('eliminar_vehiculo', id=v.id) }}" method="POST" style="display:inline;">
-                            <button onclick="return confirm('¿Eliminar%s')">🗑️</button>
-                        </form>
-                    </td>
-                </tr>
-            {% endfor %}
-            </table>
-
+<div>
+    <h2>Vehículos</h2>
+    <div style="margin-bottom: 15px;">
+        <a href="/gastos" class="btn">Ver Gastos</a>
     </div>
+</div>
 
+<form style="padding-bottom: 30px;" method="POST">
+    <input size="6" name="auto" placeholder="Auto" required>
+    <input size="6" name="patente" placeholder="Patente" required>
+    <input size="6" name="modelo" placeholder="modelo año" required>
+
+    <label for="vtv">VTV</label>
+    <input type="date" name="vtv">
+
+    <label for="remis">Remis</label>
+    <input type="date" name="remis">
+
+    <label for="gnc">GNC</label>
+    <input type="date" name="gnc">
+
+    <label for="tubo">Tubo</label>
+    <input type="date" name="tubo">
+
+    <button>Guardar</button>
+</form>
+
+<table>
+    <tr>
+        <th>Id</th>
+        <th>Auto</th>
+        <th>Patente</th>
+        <th>Modelo</th>
+        <th>VTV</th>
+        <th>Remis</th>
+        <th>GNC</th>
+        <th>Tubo</th>
+        <th>Editar</th>
+        <th>Eliminar</th>
+    </tr>
+
+    {% for v in vehiculos %}
+    <tr>
+        <td>{{ v.id }}</td>
+        <td>{{ v.auto }}</td>
+        <td>{{ v.patente }}</td>
+        <td>{{ v.modelo }}</td>
+        <td>{{ v.vtv }}</td>
+        <td>{{ v.remis }}</td>
+        <td>{{ v.gnc }}</td>
+        <td>{{ v.tubo }}</td>
+
+        <td>
+            <a href="{{ url_for('editar_vehiculo', id=v.id) }}">✏️</a>
+        </td>
+
+        <td>
+            <form action="{{ url_for('eliminar_vehiculo', id=v.id) }}" method="POST" style="display:inline;">
+                <button type="submit">🗑️</button>
+            </form>
+        </td>
+    </tr>
+
+    {% if vehiculo_con_infracciones == v.id %}
+    <tr>
+        <td colspan="10">
+            <div style="
+                background: #fff3cd;
+                color: #856404;
+                padding: 12px;
+                border: 1px solid #ffeeba;
+                border-radius: 8px;
+                margin: 8px 0;
+            ">
+                Este vehículo tiene infracciones asociadas.
+                ¿Deseás eliminarlo de todos modos?
+
+                <div style="margin-top:10px;">
+                    <a href="{{ url_for('confirmar_eliminar_vehiculo', id=v.id) }}"
+                       style="
+                            background:red;
+                            color:white;
+                            padding:8px 12px;
+                            text-decoration:none;
+                            border-radius:5px;
+                            margin-right:10px;
+                       ">
+                        Sí, eliminar igual
+                    </a>
+
+                    <a href="{{ url_for('vehiculos') }}"
+                       style="
+                            background:gray;
+                            color:white;
+                            padding:8px 12px;
+                            text-decoration:none;
+                            border-radius:5px;
+                       ">
+                        Cancelar
+                    </a>
+                </div>
+            </div>
+        </td>
+    </tr>
+    {% endif %}
+
+    {% endfor %}
+</table>
 
 {% endblock %}

@@ -1107,17 +1107,72 @@ def editar_vehiculo(id):
     return render_template('editar_vehiculo.html', vehiculo=vehiculo)
 
 
-@app.route('/eliminar_vehiculo/<int:id>', methods=['POST'])
+@app.route('/eliminar_vehiculo/<int:id>')
 @login_requerido
 def eliminar_vehiculo(id):
 
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("DELETE FROM vehiculos WHERE id = %s", (id,))
+    # verificar si tiene infracciones asociadas
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM infracciones
+        WHERE vehiculo_id = %s
+    """, (id,))
+
+    fila = cursor.fetchone()
+    total = fila["count"]
+
+    # si tiene infracciones -> pedir confirmación
+    if total > 0:
+        conn.close()
+        flash(
+            f"Este vehículo tiene {total} infracciones asociadas. "
+            f"Si lo eliminás, quedarán como 'Sin asignar'. ¿Desea eliminar igual?",
+            "warning"
+        )
+        return redirect(url_for("vehiculos", confirmar_eliminar=id))
+
+    # si no tiene -> borrar normal
+    cursor.execute("""
+        DELETE FROM vehiculos
+        WHERE id = %s
+    """, (id,))
 
     conn.commit()
     conn.close()
+
+    flash("Vehículo eliminado correctamente", "success")
+    return redirect('/vehiculos')
+
+@app.route('/confirmar_eliminar_vehiculo/<int:id>')
+@login_requerido
+def confirmar_eliminar_vehiculo(id):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    # dejar infracciones sin asignar
+    cursor.execute("""
+        UPDATE infracciones
+        SET vehiculo_id = NULL
+        WHERE vehiculo_id = %s
+    """, (id,))
+
+    # borrar vehículo
+    cursor.execute("""
+        DELETE FROM vehiculos
+        WHERE id = %s
+    """, (id,))
+
+    conn.commit()
+    conn.close()
+
+    flash(
+        "Vehículo eliminado. Las infracciones quedaron como 'Sin asignar'.",
+        "success"
+    )
 
     return redirect('/vehiculos')
 
