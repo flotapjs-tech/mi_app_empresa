@@ -1999,7 +1999,7 @@ def infracciones_conductor(conductor_id):
                     ON a.conductor_id = c.id
                 WHERE a.vehiculo_id = %s
                 AND a.fecha::date = %s
-                AND a.turno::date = %s
+                AND a.turno = %s
             """, (
                 i["vehiculo_id"],
                 fecha_anterior,
@@ -2019,7 +2019,7 @@ def infracciones_conductor(conductor_id):
                     ON a.conductor_id = c.id
                 WHERE a.vehiculo_id = %s
                 AND a.fecha::date = %s
-                AND a.turno::date = %s
+                AND a.turno = %s
             """, (
                 i["vehiculo_id"],
                 fecha_siguiente,
