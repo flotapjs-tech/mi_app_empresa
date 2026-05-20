@@ -1323,9 +1323,9 @@ def infracciones():
                 v.patente,
                 c.nombre,
                 CASE 
-                    WHEN datetime(i.fecha_carga) >= datetime('now', '-8 hours')
+                    WHEN i.fecha_carga >= NOW() - INTERVAL '8 hours'
                     THEN 1
-                     ELSE 0
+                    ELSE 0
                 END as nueva
             FROM infracciones i
             LEFT JOIN vehiculos v
