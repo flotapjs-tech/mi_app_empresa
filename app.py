@@ -1887,8 +1887,8 @@ def infracciones_conductor(conductor_id):
                 i.numero,
                 i.vehiculo_id
             FROM infracciones i
-            JOIN vehiculos v
-                ON i.vehiculo_id = 2
+            LEFT JOIN vehiculos v
+                ON i.vehiculo_id = v.id
             WHERE i.conductor_id IS NULL
             ORDER BY i.fecha DESC, i.hora DESC
         """)
@@ -1913,7 +1913,7 @@ def infracciones_conductor(conductor_id):
                 i.numero,
                 i.vehiculo_id
             FROM infracciones i
-            JOIN vehiculos v
+            LEFT JOIN vehiculos v
                 ON i.vehiculo_id = v.id
             WHERE i.conductor_id = %s
             ORDER BY i.fecha DESC, i.hora DESC
