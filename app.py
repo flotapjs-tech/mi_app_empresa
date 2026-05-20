@@ -1843,6 +1843,8 @@ def eliminar_infraccion(id):
     conn.commit()
     conn.close()
 
+    flash("Infraccion Eliminada")
+
     return redirect(request.referrer)
 
 
