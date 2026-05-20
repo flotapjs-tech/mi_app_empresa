@@ -2,64 +2,64 @@
 
 {% block content %}
 
+<h2>👨‍✈️ Conductores</h2>
 
-    <h2>👨‍✈️ Conductores</h2>
-    <form method="POST" enctype="multipart/form-data">
+<form method="POST" enctype="multipart/form-data">
 
-        <input name="nombre" placeholder="Nombre" required>
-        <input name="dni" placeholder="DNI" required>
-        <label>vto Lic</label>
-        <input  type="date" name="licencia_vencimiento">
-        
+    <input name="nombre" placeholder="Nombre" required>
+    <input name="dni" placeholder="DNI" required>
 
-        <input name="cbu" placeholder="CBU">
-        <br>
-        <hr>
+    <label>Vto Lic</label>
+    <input type="date" name="licencia_vencimiento">
 
-        <label>Lic Frente</label>
-        <input type="file" name="licencia_frente">
+    <input name="cbu" placeholder="CBU">
 
-        <label>Lic Dorso</label>
-        <input type="file" name="licencia_dorso">
-        <br>
+    <br>
+    <hr>
 
-        <label>DNI Frente</label>
-        <input type="file" name="dni_frente">
+    <label>Lic Frente</label>
+    <input type="file" name="licencia_frente">
 
-        <label>DNI Dorso</label>
-        <input type="file" name="dni_dorso">
-        <br>
+    <label>Lic Dorso</label>
+    <input type="file" name="licencia_dorso">
 
-        <label>Contrato</label>
-        <input type="file" name="contrato">
+    <br>
 
-        <button>Guardar</button>
-    </form>
+    <label>DNI Frente</label>
+    <input type="file" name="dni_frente">
 
+    <label>DNI Dorso</label>
+    <input type="file" name="dni_dorso">
 
+    <br>
 
-    <h3>Lista de conductores</h3>
+    <label>Contrato</label>
+    <input type="file" name="contrato">
 
-    <table>
-        <tr>
-            <th>Nombre</th>
-            <th>DNI</th>
-            <th>Vto. Lic</th>
-            <th>CBU</th>
-            <th>Foto Lic</th>
-            <th>Foto DNI</th>
-            <th>Contrato</th>
-            <th>Editar</th>
-            <th>Borrar</th>
-        </tr>
+    <button>Guardar</button>
+</form>
+
+<h3>Lista de conductores</h3>
+
+<table>
+    <tr>
+        <th>Nombre</th>
+        <th>DNI</th>
+        <th>Vto. Lic</th>
+        <th>CBU</th>
+        <th>Foto Lic</th>
+        <th>Foto DNI</th>
+        <th>Contrato</th>
+        <th>Editar</th>
+        <th>Borrar</th>
+    </tr>
 
     {% for d in datos %}
     <tr>
-
         <td>{{ d.nombre }}</td>
         <td>{{ d.dni }}</td>
 
-        <!-- VENCIMIENTO CON ALERTA -->
+        <!-- VENCIMIENTO -->
         <td>
             {% if d.alerta == "vencido" %}
                 <span style="color:red;">{{ d.vto }}</span>
@@ -100,17 +100,58 @@
                 <a href="{{ url_for('static', filename='uploads/' + d.contrato) }}" target="_blank">Ver</a>
             {% endif %}
         </td>
+
+        <!-- EDITAR -->
         <td>
-            <a class="btn-editar" href="/editar_conductor/{{ d.id }}">✏️</a>
+            <a class="btn-editar"
+               href="/editar_conductor/{{ d.id }}">
+               ✏️
+            </a>
         </td>
-        <td>   
-            <a class="btn-eliminar" href="/eliminar_conductor/{{ d.id }}"
-            onclick="return confirm('¿Seguro%s')">
-            🗑️
+
+        <!-- ELIMINAR -->
+        <td>
+            <a class="btn-eliminar"
+               href="/eliminar_conductor/{{ d.id }}">
+               🗑️
             </a>
         </td>
     </tr>
+
+    <!-- CONFIRMAR ELIMINACIÓN -->
+    {% if request.args.get('confirmar_eliminar') == d.id|string %}
+    <tr>
+        <td colspan="9">
+            <div style="
+                background:#fff3cd;
+                border:1px solid #ffeeba;
+                padding:12px;
+                margin:5px 0;
+                border-radius:8px;
+            ">
+                <strong>⚠️ Este conductor tiene infracciones asociadas.</strong>
+                <br>
+                Si lo eliminás, las infracciones quedarán como
+                <b>Sin asignar</b>.
+
+                <div style="margin-top:10px;">
+                    <a href="/confirmar_eliminar_conductor/{{ d.id }}"
+                       class="btn-eliminar"
+                       style="margin-right:10px;">
+                       Sí, eliminar igual
+                    </a>
+
+                    <a href="/conductores"
+                       class="btn-editar">
+                       Cancelar
+                    </a>
+                </div>
+            </div>
+        </td>
+    </tr>
+    {% endif %}
+
     {% endfor %}
-    </table>
+</table>
 
 {% endblock %}
