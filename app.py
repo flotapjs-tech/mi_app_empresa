@@ -2308,8 +2308,18 @@ def alertas():
     licencias = []
     for l in licencias_raw:
         l = dict(l)
-        fecha = l["fecha"]
-        l["vencido"] = fecha <= hoy
+
+        if l["fecha"]:
+            fecha = l["fecha"]
+
+            if isinstance(fecha, str):
+                fecha = datetime.strptime(fecha, "%Y-%m-%d").date()
+
+            l["fecha"] = fecha
+            l["vencido"] = fecha <= hoy
+        else:
+            l["vencido"] = False
+
         licencias.append(l)
 
     # VEHÍCULOS
@@ -2348,8 +2358,18 @@ def alertas():
     vehiculos = []
     for v in vehiculos_raw:
         v = dict(v)
-        fecha = v["fecha"]
-        v["vencido"] = fecha <= hoy
+
+        if v["fecha"]:
+            fecha = v["fecha"]
+
+            if isinstance(fecha, str):
+                fecha = datetime.strptime(fecha, "%Y-%m-%d").date()
+
+            v["fecha"] = fecha
+            v["vencido"] = fecha <= hoy
+        else:
+            v["vencido"] = False
+
         vehiculos.append(v)
 
     # INFRACCIONES
@@ -2365,8 +2385,18 @@ def alertas():
     infracciones = []
     for i in infracciones_raw:
         i = dict(i)
-        fecha = i["fecha"]
-        i["vencido"] = fecha <= hoy
+
+        if i["fecha"]:
+            fecha = i["fecha"]
+
+            if isinstance(fecha, str):
+                fecha = datetime.strptime(fecha, "%Y-%m-%d").date()
+
+            i["fecha"] = fecha
+            i["vencido"] = fecha <= hoy
+        else:
+            i["vencido"] = False
+
         infracciones.append(i)
 
     conn.close()
