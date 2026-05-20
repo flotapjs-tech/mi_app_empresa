@@ -1323,7 +1323,7 @@ def infracciones():
                 v.patente,
                 c.nombre,
                 CASE 
-                    WHEN i.fecha_carga >= NOW() - INTERVAL '8 hours'
+                    WHEN i.fecha_carga::timestamp >= NOW() - INTERVAL '8 hours'
                     THEN 1
                     ELSE 0
                 END as nueva
