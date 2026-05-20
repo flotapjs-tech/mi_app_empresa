@@ -776,55 +776,66 @@ def adelantos():
 
     params = []
 
-    # 🔹 MODO RESUMEN (TODOS)
+    # =========================
+    # MODO RESUMEN (TODOS)
+    # =========================
     if not conductor_id or conductor_id == "todos":
 
         modo = "resumen"
 
         query = """
-            SELECT 
-                c.nombre as conductor,
-                c.id as conductor_id,
-                COUNT(a.id) as cantidad,
-                COALESCE(SUM(a.monto), 0) as total            
+            SELECT
+                c.nombre AS conductor,
+                c.id AS conductor_id,
+                COUNT(a.id) AS cantidad,
+                COALESCE(SUM(a.monto), 0) AS total
             FROM conductores c
-            LEFT JOIN adelantos a ON c.id = a.conductor_id
-            WHERE 1=1
+            LEFT JOIN adelantos a
+                ON c.id = a.conductor_id
         """
 
+        filtros = []
+
         if fecha_desde:
-            query += " AND a.fecha >= %s"
+            filtros.append("a.fecha >= %s")
             params.append(fecha_desde)
 
         if fecha_hasta:
-            query += " AND a.fecha <= %s"
+            filtros.append("a.fecha <= %s")
             params.append(fecha_hasta)
 
+        if filtros:
+            query += " WHERE " + " AND ".join(filtros)
+
         query += """
-            GROUP BY c.id
+            GROUP BY c.id, c.nombre
             ORDER BY total DESC
         """
 
-        cursor.execute(query, params)
+        cursor.execute(query, tuple(params))
         adelantos = cursor.fetchall()
 
-        # total general del resumen
-        total = sum([a["total"] for a in adelantos]) if adelantos else 0
+        total = sum(a["total"] for a in adelantos) if adelantos else 0
 
-    # 🔹 MODO DETALLE (UN CONDUCTOR)
+    # =========================
+    # MODO DETALLE (1 CONDUCTOR)
+    # =========================
     else:
 
         modo = "detalle"
 
         query = """
-            SELECT a.*, c.nombre as conductor,
-            c.id as conductor_id
+            SELECT
+                a.*,
+                c.nombre AS conductor,
+                c.id AS conductor_id
             FROM adelantos a
-            JOIN conductores c ON a.conductor_id = c.id
+            JOIN conductores c
+                ON a.conductor_id = c.id
             WHERE a.conductor_id = %s
         """
 
-        params.append(conductor_id)
+        params = [conductor_id]
 
         if fecha_desde:
             query += " AND a.fecha >= %s"
@@ -836,15 +847,20 @@ def adelantos():
 
         query += " ORDER BY a.fecha DESC"
 
-        cursor.execute(query, params)
+        cursor.execute(query, tuple(params))
         adelantos = cursor.fetchall()
 
-        total = sum([a["monto"] for a in adelantos]) if adelantos else 0
+        total = sum(a["monto"] for a in adelantos) if adelantos else 0
 
-    # 🔹 conductores para el select
-    cursor.execute("SELECT * FROM conductores")
+    # conductores para el select
+    cursor.execute("""
+        SELECT id, nombre
+        FROM conductores
+        ORDER BY nombre
+    """)
     conductores = cursor.fetchall()
 
+    cursor.close()
     conn.close()
 
     return render_template(
@@ -852,7 +868,10 @@ def adelantos():
         adelantos=adelantos,
         total=total,
         modo=modo,
-        conductores=conductores
+        conductores=conductores,
+        conductor_id=conductor_id,
+        fecha_desde=fecha_desde,
+        fecha_hasta=fecha_hasta
     )
 
 @app.route('/guardar_adelanto', methods=['POST'])
