@@ -2273,6 +2273,22 @@ def infracciones_asignadas():
     """)
 
     resumen = cursor.fetchall()
+
+    cursor.execute("""
+    SELECT
+        i.id,
+        i.numero,
+        i.conductor_id,
+        c.id AS conductor_real,
+        c.nombre
+    FROM infracciones i
+    LEFT JOIN conductores c
+        ON i.conductor_id = c.id
+    WHERE c.id IS NULL
+""")
+
+    huerfanas = cursor.fetchall()
+    print("INFRACCIONES HUERFANAS:", huerfanas)
     conn.close()
 
     return render_template("infracciones_asignadas.html", resumen=resumen)
