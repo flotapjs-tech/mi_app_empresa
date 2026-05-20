@@ -2288,7 +2288,6 @@ def marcar_pagada(id):
 def alertas():
 
     from datetime import datetime, timedelta
-    import sqlite3
 
     conn = get_connection()
     cursor = conn.cursor()
@@ -2296,7 +2295,7 @@ def alertas():
     hoy = datetime.today().date()
     limite = hoy + timedelta(days=7)
 
-    # 🔴 LICENCIAS (conductores)
+    # LICENCIAS
     cursor.execute("""
         SELECT nombre, licencia_vencimiento AS fecha
         FROM conductores
@@ -2309,11 +2308,11 @@ def alertas():
     licencias = []
     for l in licencias_raw:
         l = dict(l)
-        fecha = v["fecha"]
+        fecha = l["fecha"]
         l["vencido"] = fecha <= hoy
         licencias.append(l)
 
-    # 🔴 VEHÍCULOS (VTV / REMIS / GNC / TUBO)
+    # VEHÍCULOS
     cursor.execute("""
         SELECT patente, 'VTV' as tipo, NULLIF(vtv, '')::date as fecha
         FROM vehiculos
@@ -2353,7 +2352,7 @@ def alertas():
         v["vencido"] = fecha <= hoy
         vehiculos.append(v)
 
-    # 🔴 INFRACCIONES
+    # INFRACCIONES
     cursor.execute("""
         SELECT numero, monto, fecha_vencimiento AS fecha
         FROM infracciones
@@ -2366,15 +2365,9 @@ def alertas():
     infracciones = []
     for i in infracciones_raw:
         i = dict(i)
-        fecha = v["fecha"]
+        fecha = i["fecha"]
         i["vencido"] = fecha <= hoy
         infracciones.append(i)
-
-        if i["fecha"]:
-            fecha = v["fecha"]
-            i["vencido"] = fecha <= hoy
-        else:
-            i["vencido"] = False
 
     conn.close()
 
