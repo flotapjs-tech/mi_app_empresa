@@ -1888,7 +1888,7 @@ def infracciones_conductor(conductor_id):
                 i.vehiculo_id
             FROM infracciones i
             JOIN vehiculos v
-                ON i.vehiculo_id = 1
+                ON i.vehiculo_id = v.id
             WHERE i.conductor_id IS NULL
             ORDER BY i.fecha DESC, i.hora DESC
         """)
