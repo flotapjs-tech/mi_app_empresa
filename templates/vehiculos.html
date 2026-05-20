@@ -76,8 +76,12 @@
                 border-radius: 8px;
                 margin: 8px 0;
             ">
-                Este vehículo tiene infracciones asociadas. 
-                ¿Deseás eliminarlo de todos modos?
+                
+
+                <strong>⚠️ Este vehiculo tiene infracciones asociadas.</strong>
+                <br>
+                Si lo eliminás, las infracciones quedarán como
+                <b>Sin asignar</b>.
 
                 <div style="margin-top:10px;">
                     <a href="{{ url_for('confirmar_eliminar_vehiculo', id=v.id) }}"
