@@ -2107,8 +2107,8 @@ def infracciones_asignadas():
         -- 🔥 NUEVAS
         SUM(
             CASE
-                WHEN datetime(i.fecha_carga)
-                     >= datetime('now', '-2 hours')
+                CASE 
+                WHEN i.fecha_carga::timestamp >= NOW() - INTERVAL '2 hours'
 
                 THEN 1
 
