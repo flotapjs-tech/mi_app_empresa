@@ -774,6 +774,7 @@ def adelantos():
     fecha_desde = request.args.get('desde')
     fecha_hasta = request.args.get('hasta')
 
+
     params = []
 
     # =========================
@@ -2210,27 +2211,31 @@ def alertas():
 
     # 🔴 VEHÍCULOS (VTV / REMIS / GNC / TUBO)
     cursor.execute("""
-        SELECT patente, 'VTV' as tipo, vtv as fecha
+        SELECT patente, 'VTV' as tipo, NULLIF(vtv, '')::date as fecha
         FROM vehiculos
-        WHERE vtv IS NOT NULL AND date(vtv) <= %s
+        WHERE NULLIF(vtv, '') IS NOT NULL
+        AND NULLIF(vtv, '')::date <= %s
 
         UNION ALL
 
-        SELECT patente, 'REMIS', remis
+        SELECT patente, 'REMIS' as tipo, NULLIF(remis, '')::date as fecha
         FROM vehiculos
-        WHERE remis IS NOT NULL AND date(remis) <= %s
+        WHERE NULLIF(remis, '') IS NOT NULL
+        AND NULLIF(remis, '')::date <= %s
 
         UNION ALL
 
-        SELECT patente, 'GNC', gnc
+        SELECT patente, 'GNC' as tipo, NULLIF(gnc, '')::date as fecha
         FROM vehiculos
-        WHERE gnc IS NOT NULL AND date(gnc) <= %s
+        WHERE NULLIF(gnc, '') IS NOT NULL
+        AND NULLIF(gnc, '')::date <= %s
 
         UNION ALL
 
-        SELECT patente, 'TUBO', tubo
+        SELECT patente, 'TUBO' as tipo, NULLIF(tubo, '')::date as fecha
         FROM vehiculos
-        WHERE tubo IS NOT NULL AND date(tubo) <= %s
+        WHERE NULLIF(tubo, '') IS NOT NULL
+        AND NULLIF(tubo, '')::date <= %s
 
         ORDER BY fecha
     """, (limite, limite, limite, limite))
