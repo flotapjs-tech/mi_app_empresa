@@ -65,7 +65,10 @@
         </td>
     </tr>
 
-    {% if vehiculo_con_infracciones == v.id %}
+    <!-- CONFIRMAR ELIMINACIÓN -->
+
+
+    {% if request.args.get("confirmar_eliminar") == v.id|string %}
     <tr>
         <td colspan="10">
             <div style="
