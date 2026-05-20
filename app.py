@@ -633,7 +633,7 @@ def editar_conductor(id):
 def asignaciones():
 
     conn = get_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
 
     hoy = date.today().isoformat()
 
@@ -641,85 +641,130 @@ def asignaciones():
     # POST
     # ======================
     if request.method == 'POST':
+        try:
+            conductor_id = request.form.get('conductor_id')
+            vehiculo_id = request.form.get('vehiculo_id')
+            fecha = request.form.get('fecha') or hoy
+            turno = request.form.get('turno')
 
-        conductor_id = request.form.get('conductor_id')
-        vehiculo_id = request.form.get('vehiculo_id')
-        fecha = request.form.get('fecha') or hoy
-        turno = request.form.get('turno')
-
-        # ======================
-        # VALIDACIÓN
-        # ======================
-        if not all([
-            conductor_id,
-            vehiculo_id,
-            fecha,
-            turno
-        ]):
-            return "Faltan datos"
-
-        # ======================
-        # VEHÍCULO DUPLICADO
-        # ======================
-        cursor.execute("""
-            SELECT 1
-            FROM asignaciones
-            WHERE fecha = %s
-            AND turno = %s
-            AND vehiculo_id = %s
-            LIMIT 1
-        """, (
-            fecha,
-            turno,
-            vehiculo_id
-        ))
-
-        if cursor.fetchone():
-            return "Ese vehículo ya está asignado en ese turno"
-
-        # ======================
-        # CONDUCTOR DUPLICADO
-        # ======================
-        cursor.execute("""
-            SELECT 1
-            FROM asignaciones
-            WHERE fecha = %s
-            AND turno = %s
-            AND conductor_id = %s
-            LIMIT 1
-        """, (
-            fecha,
-            turno,
-            conductor_id
-        ))
-
-        if cursor.fetchone():
-            return "Ese conductor ya tiene un vehículo en ese turno"
-
-        # ======================
-        # INSERT
-        # ======================
-        cursor.execute("""
-            INSERT INTO asignaciones
-            (
+            # ======================
+            # VALIDACIÓN
+            # ======================
+            if not all([
                 conductor_id,
                 vehiculo_id,
                 fecha,
                 turno
+            ]):
+                flash("Faltan datos", "danger")
+                return redirect('/asignaciones')
+
+            # ======================
+            # VEHÍCULO DUPLICADO
+            # ======================
+            cursor.execute("""
+                SELECT 1
+                FROM asignaciones
+                WHERE fecha = %s
+                AND turno = %s
+                AND vehiculo_id = %s
+                LIMIT 1
+            """, (
+                fecha,
+                turno,
+                vehiculo_id
+            ))
+
+            if cursor.fetchone():
+                flash(
+                    "Ese vehículo ya está asignado en ese turno",
+                    "warning"
+                )
+                return redirect(
+                    f'/asignaciones?fecha={fecha}'
+                )
+
+            # ======================
+            # CONDUCTOR DUPLICADO
+            # ======================
+            cursor.execute("""
+                SELECT 1
+                FROM asignaciones
+                WHERE fecha = %s
+                AND turno = %s
+                AND conductor_id = %s
+                LIMIT 1
+            """, (
+                fecha,
+                turno,
+                conductor_id
+            ))
+
+            if cursor.fetchone():
+                flash(
+                    "Ese conductor ya tiene un vehículo en ese turno",
+                    "warning"
+                )
+                return redirect(
+                    f'/asignaciones?fecha={fecha}'
+                )
+
+            # ======================
+            # REPARAR SECUENCIA
+            # ======================
+            cursor.execute("""
+                SELECT setval(
+                    pg_get_serial_sequence(
+                        'asignaciones',
+                        'id'
+                    ),
+                    COALESCE(
+                        (
+                            SELECT MAX(id)
+                            FROM asignaciones
+                        ),
+                        1
+                    )
+                )
+            """)
+
+            # ======================
+            # INSERT
+            # ======================
+            cursor.execute("""
+                INSERT INTO asignaciones (
+                    conductor_id,
+                    vehiculo_id,
+                    fecha,
+                    turno
+                )
+                VALUES (%s, %s, %s, %s)
+            """, (
+                conductor_id,
+                vehiculo_id,
+                fecha,
+                turno
+            ))
+
+            conn.commit()
+
+            flash(
+                "Asignación creada correctamente",
+                "success"
             )
-            VALUES (%s, %s, %s, %s)
-        """, (
-            conductor_id,
-            vehiculo_id,
-            fecha,
-            turno
-        ))
 
-        conn.commit()
+            return redirect(
+                f'/asignaciones?fecha={fecha}'
+            )
 
-        return redirect(
-            f'/asignaciones%sfecha={fecha}'
-        )
+        except Exception as e:
+            conn.rollback()
+            flash(
+                f'Error al guardar asignación: {str(e)}',
+                'danger'
+            )
+
+            return redirect('/asignaciones')
 
     # ======================
     # FILTROS
@@ -744,20 +789,15 @@ def asignaciones():
     # ======================
     query = """
         SELECT
-
             a.*,
             c.nombre,
             v.auto,
             v.patente
-
         FROM asignaciones a
-
         JOIN conductores c
             ON a.conductor_id = c.id
-
         JOIN vehiculos v
             ON a.vehiculo_id = v.id
-
         WHERE 1=1
     """
 
@@ -788,28 +828,29 @@ def asignaciones():
     """
 
     cursor.execute(query, params)
-
     asignaciones = cursor.fetchall()
 
     # ======================
-    # SELECTS
+    # SELECT CONDUCTORES
     # ======================
     cursor.execute("""
         SELECT *
         FROM conductores
         ORDER BY nombre
     """)
-
     conductores = cursor.fetchall()
 
+    # ======================
+    # SELECT VEHÍCULOS
+    # ======================
     cursor.execute("""
         SELECT *
         FROM vehiculos
         ORDER BY patente
     """)
-
     vehiculos = cursor.fetchall()
 
+    cursor.close()
     conn.close()
 
     return render_template(
