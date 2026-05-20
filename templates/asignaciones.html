@@ -19,11 +19,12 @@
             <option value="{{ v.id }}">{{ v.auto }} {{ v.patente }}</option>
         {% endfor %}
     </select>
-    <label for="start">Fecha</label>
+
+    <label>Fecha</label>
     <input type="date" name="fecha" value="{{ fecha }}">
 
-    <label for="start">Turno</label>
-    <select name="turno" required>      
+    <label>Turno</label>
+    <select name="turno" required>
         <option value="dia">Día (06 a 18)</option>
         <option value="noche">Noche (18 a 06)</option>
     </select>
@@ -54,16 +55,17 @@
 
     <button type="submit">Filtrar</button>
 
-    <!-- 👇 BOTÓN HOY -->
-    <a href="/asignaciones%shoy=1" 
+    <!-- HOY -->
+    <a href="/asignaciones?hoy=1"
        style="padding:6px 12px; background:#28a745; color:white; text-decoration:none; border-radius:4px;">
        Hoy
     </a>
-    <a href="/asignaciones%shistorial=1" 
+
+    <!-- HISTORIAL -->
+    <a href="/asignaciones?historial=1"
        style="padding:6px 12px; background:#28a745; color:white; text-decoration:none; border-radius:4px;">
        Historial
     </a>
-
 
 </form>
 
@@ -84,13 +86,17 @@
         <td>{{ a.fecha }}</td>
         <td>{{ a.turno }}</td>
         <td>{{ a.nombre }}</td>
-        <td>{{ a.vehiculo }} {{a.patente}}</td>
+        <td>{{ a.auto }} {{ a.patente }}</td>
         <td>
-            <form action="{{ url_for('eliminar_asignacion', id=a.id) }}" method="POST" style="display:inline;">
-            <button onclick="return confirm('¿Eliminar asignación%s')">
-                🗑️
-            </button>
-        </form>
+            <form action="{{ url_for('eliminar_asignacion', id=a.id) }}"
+                  method="POST"
+                  style="display:inline;">
+                <button
+                    type="submit"
+                    onclick="return confirm('¿Eliminar asignación?')">
+                    🗑️
+                </button>
+            </form>
         </td>
     </tr>
     {% endfor %}
