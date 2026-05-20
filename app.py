@@ -880,22 +880,22 @@ def guardar_adelanto():
 
     return redirect('/adelantos')
 
-@app.route("/eliminar_adelanto/<int:id>")
+@app.route("/eliminar_adelanto/<int:id>", methods=["POST"])
 @login_requerido
 def eliminar_adelanto(id):
-
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("""
-        DELETE FROM adelantos
-        WHERE id = %s
-    """, (id,))
+    cursor.execute(
+        "DELETE FROM adelantos WHERE id = %s",
+        (id,)
+    )
 
     conn.commit()
+    cursor.close()
     conn.close()
 
-    flash("Adelanto eliminado")
+    flash("Adelanto eliminado correctamente")
     return redirect(url_for("adelantos"))
 
 @app.route("/editar_adelanto/<int:id>", methods=["GET", "POST"])
