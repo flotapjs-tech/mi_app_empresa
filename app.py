@@ -2142,7 +2142,7 @@ def infracciones_conductor(conductor_id):
                 OR i.conductor_id = 0
                 OR c.id IS NULL
 
-            ORDER BY i.fecha DESC, i.hora DESC
+            ORDER BY v.patente DESC, i.fecha DESC
         """)
 
         nombre = "Sin asignar"
