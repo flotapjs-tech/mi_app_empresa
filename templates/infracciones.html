@@ -56,13 +56,10 @@
     <input type="date" name="fecha_vencimiento" required>
 
     <button type="submit">Guardar</button>
-    <a href="/infracciones_asignadas">
-         <button type="button">Asignadas</button>
-    </a>
 
 </form>
 <hr>
-<a href="{{ url_for('infracciones', modo='detalle') }}">
+    <a href="{{ url_for('infracciones', modo='detalle') }}">
         <button {% if modo == 'detalle' %}style="font-weight:bold;"{% endif %}>
             Detalle
         </button>
@@ -72,6 +69,9 @@
         <button {% if modo == 'resumen' %}style="font-weight:bold;"{% endif %}>
             Resumen
         </button>
+    </a>
+    <a href="/infracciones_asignadas">
+         <button type="button">Asignadas</button>
     </a>
 
 
