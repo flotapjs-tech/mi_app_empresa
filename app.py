@@ -2528,13 +2528,12 @@ def alertas():
 
     conn.close()
 
-    total = len(licencias) + len(vehiculos) + len(infracciones)
+    total = len(licencias) + len(vehiculos) 
 
     return render_template(
         'alertas.html',
         licencias=licencias,
         vehiculos=vehiculos,
-        infracciones=infracciones,
         total=total,
         hoy=hoy
     )
