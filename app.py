@@ -1316,9 +1316,9 @@ def gastos():
 
     LEFT JOIN mecanica m 
         ON v.id = m.vehiculo_id 
-        AND TO_CHAR(m.fecha, 'YYYY-MM') = %s
+        AND strftime('%Y-%m', m.fecha) = %s
 
-    GROUP BY v.id, g.seguro, g.patente, g.vtv, g.satelital
+    GROUP BY v.id
 """, (mes, mes))
 
     datos = cursor.fetchall()
@@ -2534,6 +2534,7 @@ def alertas():
         'alertas.html',
         licencias=licencias,
         vehiculos=vehiculos,
+        infracciones=infracciones,
         total=total,
         hoy=hoy
     )
