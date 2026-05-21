@@ -2600,7 +2600,7 @@ def alertas_global():
     veh = cursor.fetchone()["total"]
 
     # infracciones
-    cursor.execute("""
+    '''cursor.execute("""
         SELECT COUNT(*) as total
         FROM infracciones
         WHERE fecha_vencimiento IS NOT NULL
@@ -2608,12 +2608,12 @@ def alertas_global():
         AND date(fecha_vencimiento) <= %s
     """, (limite,))
 
-    inf = cursor.fetchone()["total"]
+    inf = cursor.fetchone()["total"]'''
 
     conn.close()
 
     return {
-        "alertas_total": lic + veh + inf
+        "alertas_total": lic + veh
     }
 
 
