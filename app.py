@@ -2498,6 +2498,7 @@ def alertas():
         vehiculos.append(v)
 
     # INFRACCIONES
+    '''
     cursor.execute("""
         SELECT numero, monto, fecha_vencimiento AS fecha
         FROM infracciones
@@ -2522,7 +2523,8 @@ def alertas():
         else:
             i["vencido"] = False
 
-        infracciones.append(i)
+        infracciones.append(i)  '''
+
 
     conn.close()
 
