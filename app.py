@@ -2028,7 +2028,6 @@ def infracciones_conductor(conductor_id):
     # =========================
     # TRAER CONDUCTOR
     # =========================
-
     if conductor_id != 0:
 
         cursor.execute("""
@@ -2042,7 +2041,6 @@ def infracciones_conductor(conductor_id):
     # =========================
     # SIN ASIGNAR
     # =========================
-
     if conductor_id == 0:
 
         cursor.execute("""
@@ -2057,9 +2055,18 @@ def infracciones_conductor(conductor_id):
                 i.numero,
                 i.vehiculo_id
             FROM infracciones i
+
             LEFT JOIN vehiculos v
                 ON i.vehiculo_id = v.id
-            WHERE i.conductor_id IS NULL
+
+            LEFT JOIN conductores c
+                ON i.conductor_id = c.id
+
+            WHERE
+                i.conductor_id IS NULL
+                OR i.conductor_id = 0
+                OR c.id IS NULL
+
             ORDER BY i.fecha DESC, i.hora DESC
         """)
 
@@ -2068,7 +2075,6 @@ def infracciones_conductor(conductor_id):
     # =========================
     # CONDUCTOR NORMAL
     # =========================
-
     else:
 
         cursor.execute("""
@@ -2098,7 +2104,6 @@ def infracciones_conductor(conductor_id):
     # =========================
     # RECORRER INFRACCIONES
     # =========================
-
     for i in infracciones:
 
         i = dict(i)
@@ -2106,7 +2111,6 @@ def infracciones_conductor(conductor_id):
         # =========================
         # SOLO PARA SIN ASIGNAR
         # =========================
-
         if conductor_id == 0:
 
             turno, fecha_busqueda = obtener_turno_y_fecha(
@@ -2114,7 +2118,6 @@ def infracciones_conductor(conductor_id):
                 i["hora"]
             )
 
-            # fecha ya viene como date en postgres
             if isinstance(fecha_busqueda, str):
 
                 fecha_obj = datetime.strptime(
@@ -2123,45 +2126,33 @@ def infracciones_conductor(conductor_id):
                 ).date()
 
             else:
-
                 fecha_obj = fecha_busqueda
 
             # =========================
             # TURNO DIA
             # =========================
-
             if turno == "dia":
 
-                fecha_anterior = (
-                    fecha_obj - timedelta(days=1)
-                )
-
+                fecha_anterior = fecha_obj - timedelta(days=1)
                 turno_anterior = "noche"
 
                 fecha_siguiente = fecha_obj
-
                 turno_siguiente = "noche"
 
             # =========================
             # TURNO NOCHE
             # =========================
-
             else:
 
                 fecha_anterior = fecha_obj
-
                 turno_anterior = "dia"
 
-                fecha_siguiente = (
-                    fecha_obj + timedelta(days=1)
-                )
-
+                fecha_siguiente = fecha_obj + timedelta(days=1)
                 turno_siguiente = "dia"
 
             # =========================
             # BUSCAR ANTERIOR
             # =========================
-
             cursor.execute("""
                 SELECT c.nombre
                 FROM asignaciones a
@@ -2181,7 +2172,6 @@ def infracciones_conductor(conductor_id):
             # =========================
             # BUSCAR SIGUIENTE
             # =========================
-
             cursor.execute("""
                 SELECT c.nombre
                 FROM asignaciones a
@@ -2206,7 +2196,6 @@ def infracciones_conductor(conductor_id):
     # =========================
     # LISTA CONDUCTORES
     # =========================
-
     cursor.execute("""
         SELECT id, nombre
         FROM conductores
