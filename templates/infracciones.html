@@ -62,7 +62,7 @@
 
 </form>
 <hr>
-<a href="{{ url_for('infracciones_vehiculo', vehiculo_id=i.id) }}">
+<a href="{{ url_for('infracciones', modo='detalle') }}">
         <button {% if modo == 'detalle' %}style="font-weight:bold;"{% endif %}>
             Detalle
         </button>
@@ -139,7 +139,7 @@
     {% for i in infracciones %}
     <tr>
         <td>
-            <a href="{{ url_for('infracciones', modo ='detalle', vehiculo_id=i.id) }}">
+            <a href="{{ url_for('infracciones_vehiculo', vehiculo_id=i.id) }}">
                 {{ i.patente }}
             </a>
         </td>
