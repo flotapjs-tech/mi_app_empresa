@@ -78,6 +78,7 @@ def obtener_turno_y_fecha(fecha_str, hora_str):
 
     return turno, fecha_busqueda.isoformat()
 
+
 def buscar_conductor_automatico(
     cursor,
     vehiculo_id,
@@ -280,10 +281,12 @@ def login():
 
     return render_template("login.html")
 
+
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/login")
+
 
 @app.route("/")
 @login_requerido
@@ -399,7 +402,6 @@ def conductores():
     )
 
 
-
 @app.route("/eliminar_conductor/<int:id>")
 @login_requerido
 def eliminar_conductor(id):
@@ -457,6 +459,7 @@ def eliminar_conductor(id):
     flash("Conductor eliminado correctamente", "success")
     return redirect("/conductores")
 
+
 @app.route("/confirmar_eliminar_conductor/<int:id>")
 @login_requerido
 def confirmar_eliminar_conductor(id):
@@ -504,6 +507,7 @@ def confirmar_eliminar_conductor(id):
     )
 
     return redirect("/conductores")
+
 
 @app.route("/editar_conductor/<int:id>", methods=["GET", "POST"])
 @login_requerido
@@ -627,6 +631,7 @@ def editar_conductor(id):
         "editar_conductor.html",
         conductor=conductor
     )
+
 
 @app.route('/asignaciones', methods=['GET', 'POST'])
 @login_requerido
@@ -876,6 +881,7 @@ def eliminar_asignacion(id):
 
     return redirect('/asignaciones')
 
+
 @app.route('/adelantos')
 @login_requerido
 def adelantos():
@@ -988,6 +994,7 @@ def adelantos():
         fecha_hasta=fecha_hasta
     )
 
+
 @app.route('/guardar_adelanto', methods=['POST'])
 @login_requerido
 def guardar_adelanto():
@@ -1013,6 +1020,7 @@ def guardar_adelanto():
 
     return redirect('/adelantos')
 
+
 @app.route("/eliminar_adelanto/<int:id>", methods=["POST"])
 @login_requerido
 def eliminar_adelanto(id):
@@ -1030,6 +1038,7 @@ def eliminar_adelanto(id):
 
     flash("Adelanto eliminado correctamente")
     return redirect(url_for("adelantos"))
+
 
 @app.route("/editar_adelanto/<int:id>", methods=["GET", "POST"])
 @login_requerido
@@ -1089,6 +1098,7 @@ def editar_adelanto(id):
         conductores=conductores
     )
 
+
 @app.route("/vehiculos", methods=["GET", "POST"])
 @login_requerido
 def vehiculos():
@@ -1118,6 +1128,7 @@ def vehiculos():
     conn.close()
 
     return render_template("vehiculos.html", vehiculos=lista)
+
 
 @app.route('/editar_vehiculo/<int:id>', methods=['GET', 'POST'])
 def editar_vehiculo(id):
@@ -1187,6 +1198,7 @@ def eliminar_vehiculo(id):
     flash("Vehículo eliminado correctamente", "success")
     return redirect('/vehiculos')
 
+
 @app.route('/confirmar_eliminar_vehiculo/<int:id>')
 @login_requerido
 def confirmar_eliminar_vehiculo(id):
@@ -1217,6 +1229,7 @@ def confirmar_eliminar_vehiculo(id):
 
     return redirect('/vehiculos')
 
+
 @app.route("/vencimientos")
 @login_requerido
 def vencimientos():
@@ -1234,6 +1247,7 @@ def vencimientos():
     conn.close()
 
     return render_template("vencimientos.html", datos=datos)
+
 
 @app.route("/gastos", methods=["GET", "POST"])
 @login_requerido
@@ -1317,6 +1331,7 @@ def gastos():
         mes=mes
     )
 
+
 @app.route("/vehiculo/<int:id>")
 @login_requerido
 def vehiculo_detalle(id):
@@ -1336,6 +1351,7 @@ def vehiculo_detalle(id):
     conn.close()
 
     return render_template("vehiculo_detalle.html", detalle=detalle)
+
 
 @app.route("/mecanica", methods=["GET", "POST"])
 @login_requerido
@@ -1592,6 +1608,65 @@ def infracciones():
    )
 
 
+@app.route('/infracciones_vehiculo/<int:vehiculo_id>')
+@login_requerido
+def infracciones_vehiculo(vehiculo_id):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    # =========================
+    # INFRACCIONES DEL VEHÍCULO
+    # =========================
+    cursor.execute("""
+        SELECT
+            i.*,
+            v.patente,
+            c.nombre,
+            CASE
+                WHEN i.fecha_carga::timestamp >= NOW() - INTERVAL '8 hours'
+                THEN 1
+                ELSE 0
+            END AS nueva
+        FROM infracciones i
+
+        LEFT JOIN vehiculos v
+            ON i.vehiculo_id = v.id
+
+        LEFT JOIN conductores c
+            ON i.conductor_id = c.id
+
+        WHERE i.vehiculo_id = %s
+
+        ORDER BY i.fecha DESC, i.hora DESC
+    """, (vehiculo_id,))
+
+    infracciones = cursor.fetchall()
+
+    # =========================
+    # VEHÍCULOS
+    # =========================
+    cursor.execute("""
+        SELECT *
+        FROM vehiculos
+        ORDER BY patente
+    """)
+
+    vehiculos = cursor.fetchall()
+
+    conn.close()
+
+    from datetime import date
+    hoy = date.today().isoformat()
+
+    return render_template(
+        "infracciones.html",
+        infracciones=infracciones,
+        vehiculos=vehiculos,
+        hoy=hoy,
+        modo="detalle"
+    )
+
 
 @app.route('/infracciones_resumen')
 @login_requerido
@@ -1616,7 +1691,6 @@ def infracciones_resumen():
     conn.close()
 
     return render_template("infracciones_resumen.html", resumen=resumen)
-
 
 
 @app.route('/importar_infracciones', methods=['POST'])
@@ -2000,6 +2074,7 @@ def importar_infracciones():
 
     return redirect(url_for('infracciones'))
 
+
 @app.route('/eliminar_infraccion/<int:id>')
 @login_requerido
 def eliminar_infraccion(id):
@@ -2215,6 +2290,7 @@ def infracciones_conductor(conductor_id):
         conductores=conductores
     )
 
+
 @app.route('/infracciones_asignadas', methods=['GET'])
 @login_requerido
 def infracciones_asignadas():
@@ -2282,6 +2358,7 @@ def infracciones_asignadas():
 
     return render_template("infracciones_asignadas.html", resumen=resumen)
 
+
 @app.route('/asignar_infraccion/<int:id>', methods=['POST'])
 @login_requerido
 def asignar_infraccion(id):
@@ -2311,6 +2388,7 @@ def asignar_infraccion(id):
     flash("Infracción asignada")
     return redirect(request.referrer)
 
+
 @app.route("/marcar_pagada/<int:id>", methods=['GET',  'POST'])
 @login_requerido
 def marcar_pagada(id):
@@ -2328,6 +2406,7 @@ def marcar_pagada(id):
     conn.close()
 
     return redirect(request.referrer)
+
 
 @app.route('/alertas')
 @login_requerido
@@ -2458,6 +2537,7 @@ def alertas():
         hoy=hoy
     )
 
+
 @app.context_processor
 def alertas_global():
 
@@ -2535,6 +2615,7 @@ def alertas_global():
     return {
         "alertas_total": lic + veh + inf
     }
+
 
 @app.route("/")
 @login_requerido
