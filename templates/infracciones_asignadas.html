@@ -37,8 +37,20 @@
             0
             {% endif %}
         </td>
-        <td>{{ r.total_pagadas or 0 }}</td>
-        <td>{{ r.total_pendientes or 0 }}</td>
+        <td>
+            {% if r.total_pagadas > 0 %}
+                <span style="color:green;">{{ r.total_pagadas }}</span>
+            {% else %}
+                0
+            {% endif %}
+        </td>
+        <td>
+            {% if r.total_pendientes > 0 %}
+                <span style="color:red;">{{ r.total_pendientes }}</span>
+            {% else %}
+                0
+            {% endif %} 
+        </td>
         <td>{{ r.monto_total or 0 }}</td>
         <td>{{ r.monto_pendiente or 0 }}</td>
     </tr>
