@@ -1297,29 +1297,31 @@ def gastos():
 
     # 📌 TRAER DATOS (vehículos + gastos del mes)
     cursor.execute("""
-    SELECT 
-        v.id,
-        v.auto,
-        v.patente,
+        SELECT 
+            v.id,
+            v.auto,
+            v.patente,
 
-        COALESCE(g.seguro, 0) AS seguro,
-        COALESCE(g.patente, 0) AS patente_gasto,
-        COALESCE(g.vtv, 0) AS vtv,
-        COALESCE(g.satelital, 0) AS satelital,
+            COALESCE(g.seguro, 0) AS seguro,
+            COALESCE(g.patente, 0) AS patente_gasto,
+            COALESCE(g.vtv, 0) AS vtv,
+            COALESCE(g.satelital, 0) AS satelital,
 
-        COALESCE(SUM(m.monto), 0) AS mecanica
+            COALESCE(SUM(m.monto), 0) AS mecanica
 
-    FROM vehiculos v
+        FROM vehiculos v
 
-    LEFT JOIN gastos g 
-        ON v.id = g.vehiculo_id AND g.mes = %s
+        LEFT JOIN gastos g
+            ON v.id = g.vehiculo_id
+            AND g.mes = %s
 
-    LEFT JOIN mecanica m 
-        ON v.id = m.vehiculo_id 
-        AND strftime('%Y-%m', m.fecha) = %s
+        LEFT JOIN mecanica m
+            ON v.id = m.vehiculo_id
+            AND TO_CHAR(NULLIF(m.fecha, '')::date, 'YYYY-MM') = %s
 
-    GROUP BY v.id
-""", (mes, mes))
+        GROUP BY v.id, v.auto, v.patente,
+                g.seguro, g.patente, g.vtv, g.satelital
+    """, (mes, mes))
 
     datos = cursor.fetchall()
 
