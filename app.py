@@ -1361,7 +1361,7 @@ def mecanica():
     conn = get_connection()
     cursor = conn.cursor()
 
-    # 👉 GUARDAR NUEVO REGISTRO
+    # GUARDAR NUEVO REGISTRO
     if request.method == "POST":
         vehiculo_id = request.form["vehiculo_id"]
         fecha = request.form["fecha"]
@@ -1376,59 +1376,80 @@ def mecanica():
 
         conn.commit()
 
-    # 👉 TRAER VEHÍCULOS (para el select)
+    # VEHÍCULOS
     cursor.execute("SELECT id, auto, patente FROM vehiculos")
     vehiculos = cursor.fetchall()
 
-    # 👉 TRAER REGISTROS DE MECÁNICA
+    # FILTROS
     vehiculo_id = request.args.get("vehiculo_id")
     mes = request.args.get("mes")
-    
-    query ="""
-        SELECT m.id, v.auto, v.patente, m.fecha, m.descripcion, m.monto, m.kilometros
+
+    query = """
+        SELECT
+            m.id,
+            v.auto,
+            v.patente,
+            m.fecha,
+            m.descripcion,
+            m.monto,
+            m.kilometros
         FROM mecanica m
         JOIN vehiculos v ON m.vehiculo_id = v.id
         WHERE 1=1
-        """
+    """
     params = []
 
     if vehiculo_id:
-        query += "AND m.vehiculo_id = %s"
+        query += " AND m.vehiculo_id = %s"
         params.append(vehiculo_id)
 
     if mes:
-        query += "AND strftime('%Y-%m', m.fecha) = %s"
+        query += " AND TO_CHAR(m.fecha, 'YYYY-MM') = %s"
         params.append(mes)
 
     query += " ORDER BY m.fecha DESC"
-    cursor.execute(query, params)        
-    registros = cursor.fetchall()
-    total = sum([r[5] for r in registros])
 
+    cursor.execute(query, params)
+    registros = cursor.fetchall()
+
+    # TOTAL GENERAL
+    total = sum(r["monto"] for r in registros)
+
+    # TOTAL POR VEHÍCULO
     cursor.execute("""
-        SELECT v.auto, v.patente, SUM(m.monto)
+        SELECT
+            v.auto,
+            v.patente,
+            SUM(m.monto) AS total
         FROM mecanica m
         JOIN vehiculos v ON m.vehiculo_id = v.id
-        GROUP BY m.vehiculo_id
-     """)
+        GROUP BY v.auto, v.patente
+    """)
     totales_vehiculo = cursor.fetchall()
 
+    # RESUMEN MENSUAL
     cursor.execute("""
-        SELECT strftime('%Y-%m', fecha) as mes, SUM(monto)
+        SELECT
+            TO_CHAR(fecha, 'YYYY-MM') AS mes,
+            SUM(monto) AS total
         FROM mecanica
-        GROUP BY mes
+        GROUP BY TO_CHAR(fecha, 'YYYY-MM')
         ORDER BY mes DESC
     """)
     resumen_mensual = cursor.fetchall()
 
     conn.close()
 
-    return render_template("mecanica.html",
-        vehiculos=vehiculos, 
+    return render_template(
+        "mecanica.html",
+        vehiculos=vehiculos,
         registros=registros,
-        total=total, vehiculo_id=vehiculo_id, 
-        mes=mes, totales_vehiculo=totales_vehiculo, resumen_mensual=resumen_mensual)
-
+        total=total,
+        vehiculo_id=vehiculo_id,
+        mes=mes,
+        totales_vehiculo=totales_vehiculo,
+        resumen_mensual=resumen_mensual
+    )
 
 @app.route('/infracciones', methods=['GET', 'POST'])
 @login_requerido
