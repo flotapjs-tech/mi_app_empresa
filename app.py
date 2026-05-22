@@ -2333,8 +2333,8 @@ def infracciones_asignadas():
 
         GROUP BY c.id, c.nombre
 
-        ORDER BY nuevas DESC,
-                total_pendientes DESC
+        ORDER BY nombre,
+                total_pendientes ASC
     """)
 
     resumen = cursor.fetchall()
