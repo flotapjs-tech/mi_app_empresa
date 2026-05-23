@@ -14,7 +14,7 @@ sqlite_cursor = sqlite_conn.cursor()
 # POSTGRES
 # =========================
 
-DATABASE_URL = "postgresql://empresa_3cu1_user:XV5AVy6PHS4KPU2cqRjqv6Y1zjr8WauW@dpg-d8661bb7uimc73c0s6bg-a.virginia-postgres.render.com/empresa_3cu1"
+DATABASE_URL = "postgresql://empresadb_9r7b_user:XNuUT2UjYz80nmsK7SeMU99dfce9I3Hh@dpg-d8661bb7uimc73c0s6bg-a/empresa_3cu1"
 
 pg_conn = psycopg2.connect(DATABASE_URL)
 

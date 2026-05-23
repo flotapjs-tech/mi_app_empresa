@@ -1361,10 +1361,12 @@ def mecanica():
     conn = get_connection()
     cursor = conn.cursor()
 
+    # =========================
     # GUARDAR NUEVO REGISTRO
+    # =========================
     if request.method == "POST":
         vehiculo_id = request.form["vehiculo_id"]
-        fecha = request.form["fecha"]
+        fecha = request.form["fecha"]  # formato: YYYY-MM-DD
         descripcion = request.form["descripcion"]
         monto = request.form["monto"]
         kilometros = request.form["kilometros"]
@@ -1376,11 +1378,15 @@ def mecanica():
 
         conn.commit()
 
+    # =========================
     # VEHÍCULOS
+    # =========================
     cursor.execute("SELECT id, auto, patente FROM vehiculos")
     vehiculos = cursor.fetchall()
 
+    # =========================
     # FILTROS
+    # =========================
     vehiculo_id = request.args.get("vehiculo_id")
     mes = request.args.get("mes")
 
@@ -1397,25 +1403,33 @@ def mecanica():
         JOIN vehiculos v ON m.vehiculo_id = v.id
         WHERE 1=1
     """
+
     params = []
 
     if vehiculo_id:
         query += " AND m.vehiculo_id = %s"
         params.append(vehiculo_id)
 
+    # =========================
+    # FILTRO MES (FIX SIN TO_CHAR)
+    # =========================
     if mes:
-        query += " AND TO_CHAR(m.fecha, 'YYYY-MM') = %s"
-        params.append(mes)
+        query += " AND m.fecha LIKE %s"
+        params.append(f"{mes}%")
 
     query += " ORDER BY m.fecha DESC"
 
     cursor.execute(query, params)
     registros = cursor.fetchall()
 
+    # =========================
     # TOTAL GENERAL
+    # =========================
     total = sum(r["monto"] for r in registros)
 
+    # =========================
     # TOTAL POR VEHÍCULO
+    # =========================
     cursor.execute("""
         SELECT
             v.auto,
@@ -1427,13 +1441,15 @@ def mecanica():
     """)
     totales_vehiculo = cursor.fetchall()
 
-    # RESUMEN MENSUAL
+    # =========================
+    # RESUMEN MENSUAL (FIX SIN TO_CHAR)
+    # =========================
     cursor.execute("""
         SELECT
-            TO_CHAR(fecha, 'YYYY-MM') AS mes,
+            SUBSTRING(fecha, 1, 7) AS mes,
             SUM(monto) AS total
         FROM mecanica
-        GROUP BY TO_CHAR(fecha, 'YYYY-MM')
+        GROUP BY SUBSTRING(fecha, 1, 7)
         ORDER BY mes DESC
     """)
     resumen_mensual = cursor.fetchall()
