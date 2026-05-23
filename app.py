@@ -2443,8 +2443,7 @@ def alertas():
     hoy = datetime.today().date()
     limite = hoy + timedelta(days=7)
 
-    if not limite:
-        limite = None
+    
 
     # LICENCIAS
     cursor.execute("""
