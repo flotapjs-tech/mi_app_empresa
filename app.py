@@ -2557,7 +2557,6 @@ def alertas():
         'alertas.html',
         licencias=licencias,
         vehiculos=vehiculos,
-        infracciones=infracciones,
         total=total,
         hoy=hoy
     )
