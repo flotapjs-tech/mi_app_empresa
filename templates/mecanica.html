@@ -2,34 +2,37 @@
 
 {% block content %}
 
-
 <div style="display: flex; justify-content: space-between; align-items: center;">
-<h2>Mantenimiento / Mecanica</h2>
-<div style="text-align: right;" >
-    <a href="/gastos">
-        <button>volver</button>
-    </a>
-</div>
+    <h2>Mantenimiento / Mecánica</h2>
+
+    <div style="text-align: right;">
+        <a href="/gastos">
+            <button>Volver</button>
+        </a>
+    </div>
 </div>
 
+<hr>
 
-<!-- FORMULARIO -->
+<!-- ========================= -->
+<!-- FORMULARIO ALTA -->
+<!-- ========================= -->
 <form method="POST" class="form-mecanica">
-    
+
     <input type="date" name="fecha" required>
 
     <select name="vehiculo_id" required>
         <option value="">Seleccionar vehículo</option>
         {% for v in vehiculos %}
-            <option value="{{ v[0] }}">
-                {{ v[1] }} - {{ v[2] }}
+            <option value="{{ v.id }}">
+                {{ v.auto }} - {{ v.patente }}
             </option>
         {% endfor %}
     </select>
 
     <input type="text" name="descripcion" placeholder="Detalle" required>
 
-    <input type="number" name="kilometros" placeholder="Kilometros" required>
+    <input type="number" name="kilometros" placeholder="Kilómetros" required>
 
     <input type="number" step="0.01" name="monto" placeholder="Monto" required>
 
@@ -37,57 +40,70 @@
 
 </form>
 
+<hr>
+
 <h2>Mecánica</h2>
 
+<!-- ========================= -->
+<!-- FILTROS -->
+<!-- ========================= -->
 <form method="GET" style="margin-bottom: 15px;">
 
-    <!-- FILTRO VEHÍCULO -->
     <select name="vehiculo_id">
         <option value="">Todos los vehículos</option>
         {% for v in vehiculos %}
-            <option value="{{ v[0] }}"
-            {% if vehiculo_id == v[0]|string %}selected{% endif %}>
-                {{ v[1] }} - {{ v[2] }}
+            <option value="{{ v.id }}"
+                {% if vehiculo_id == v.id|string %}selected{% endif %}>
+                {{ v.auto }} - {{ v.patente }}
             </option>
         {% endfor %}
     </select>
 
-    <!-- FILTRO MES -->
     <input type="month" name="mes" value="{{ mes }}">
 
     <button type="submit">Filtrar</button>
 
-    <!-- LIMPIAR -->
     <a href="/mecanica">Limpiar</a>
-
 </form>
 
-<!-- TABLA -->
+<hr>
+
+<!-- ========================= -->
+<!-- TABLA REGISTROS -->
+<!-- ========================= -->
 <table class="tabla">
     <thead>
         <tr>
             <th>Fecha</th>
             <th>Auto</th>
             <th>Patente</th>
-            <th>Kilometros</th>
+            <th>Kilómetros</th>
             <th>Descripción</th>
             <th>Monto</th>
         </tr>
     </thead>
+
     <tbody>
         {% for r in registros %}
         <tr>
-            <td>{{ r[3] }}</td>
-            <td>{{ r[1] }}</td>
-            <td>{{ r[2] }}</td>
-            <td>Kms{{ r[6] }}</td>
-            <td>{{ r[4] }}</td>
-            <td>${{ r[5] }}</td>
+            <td>{{ r.fecha }}</td>
+            <td>{{ r.auto }}</td>
+            <td>{{ r.patente }}</td>
+            <td>{{ r.kilometros }}</td>
+            <td>{{ r.descripcion }}</td>
+            <td>${{ r.monto }}</td>
         </tr>
         {% endfor %}
     </tbody>
-    <h3>Total: ${{ total }}</h3>
 </table>
+
+<h3>Total: ${{ total }}</h3>
+
+<hr>
+
+<!-- ========================= -->
+<!-- TOTALES POR VEHÍCULO -->
+<!-- ========================= -->
 <h3>Totales por vehículo</h3>
 
 <table>
@@ -99,13 +115,18 @@
 
     {% for t in totales_vehiculo %}
     <tr>
-        <td>{{ t[0] }}</td>
-        <td>{{ t[1] }}</td>
-        <td>{{ t[2] }}</td>
+        <td>{{ t.auto }}</td>
+        <td>{{ t.patente }}</td>
+        <td>${{ t.total }}</td>
     </tr>
     {% endfor %}
 </table>
 
+<hr>
+
+<!-- ========================= -->
+<!-- RESUMEN MENSUAL -->
+<!-- ========================= -->
 <h3>Resumen mensual</h3>
 
 <table>
@@ -116,8 +137,8 @@
 
     {% for r in resumen_mensual %}
     <tr>
-        <td>{{ r[0] }}</td>
-        <td>{{ r[1] }}</td>
+        <td>{{ r.mes }}</td>
+        <td>${{ r.total }}</td>
     </tr>
     {% endfor %}
 </table>
