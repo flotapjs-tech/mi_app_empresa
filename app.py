@@ -1467,6 +1467,21 @@ def mecanica():
         resumen_mensual=resumen_mensual
     )
 
+@app.route('/eliminar_gasto_mecanica/<int:id>')
+@login_requerido
+def eliminar_gasto_mecanica(id):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM mecanica WHERE id = %s", (id,))
+    conn.commit()
+    conn.close()
+
+    flash("reparacion eliminada")
+
+    return redirect(request.referrer)
+
 @app.route('/infracciones', methods=['GET', 'POST'])
 @login_requerido
 def infracciones():
@@ -2568,7 +2583,7 @@ def alertas():
 def alertas_global():
 
     from datetime import datetime, timedelta
-    import sqlite3
+    
 
     conn = get_connection()
     cursor = conn.cursor()
