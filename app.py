@@ -1467,7 +1467,7 @@ def mecanica():
         resumen_mensual=resumen_mensual
     )
 
-@app.route('/eliminar_gasto_mecanica/<int:id>')
+@app.route('/eliminar_gasto_mecanica/<int:id>', methods=["POST"])
 @login_requerido
 def eliminar_gasto_mecanica(id):
 
