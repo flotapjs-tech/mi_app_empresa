@@ -22,8 +22,8 @@
         }
 
         .sidebar-header {
-            min-height: 110px;   /* reserva espacio */
-            padding: 15px 0 15px 0;   /* margen arriba y abajo */
+            height: 110px;
+            padding: 15px 0;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -33,9 +33,9 @@
 
         .sidebar-logo {
             width: 140px;
-            height: auto;
-            display: block;
+            height: 70px;      /* fijo */
             object-fit: contain;
+            display: block;
         }
 
         .sidebar h2 {
@@ -158,8 +158,8 @@
             class="sidebar-logo"
             src="{{ url_for('static', filename='img/logo.png') }}"
             alt="Logo empresa"
-            width="140"
-            height="70"
+            loading="eager"
+            decoding="sync"
         >
     </div>
     <p style="text-align: center;"> {{ session["usuario"] }}</p>
