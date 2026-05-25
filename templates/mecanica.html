@@ -80,6 +80,7 @@
             <th>Kilómetros</th>
             <th>Descripción</th>
             <th>Monto</th>
+            <th>Eliminar</th>
         </tr>
     </thead>
 
@@ -93,10 +94,10 @@
             <td>{{ r.descripcion }}</td>
             <td>${{ r.monto }}</td>
             <td>
-            <form action="{{ url_for('eliminar_gasto_mecanica', id=v.id) }}" method="POST" style="display:inline;">
-                <button type="submit">🗑️</button>
-            </form>
-        </td>
+                <form action="{{ url_for('eliminar_gasto_mecanica', id=r.id) }}" method="POST" style="display:inline;">
+                    <button type="submit">🗑️</button>
+                </form>
+            </td>
         </tr>
         {% endfor %}
     </tbody>
