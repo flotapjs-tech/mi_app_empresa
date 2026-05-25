@@ -59,13 +59,13 @@
 <div style="margin-bottom: 8px;">
     <a style="margin-left: 10px;" href="{{ url_for('infracciones', modo='detalle') }}">
         <button {% if modo == 'detalle' %}style="font-weight:bold;"{% endif %}>
-            Detalle
+            Totales
         </button>
     </a>
 
     <a style="margin-left: 10px;" href="{{ url_for('infracciones', modo='resumen') }}">
         <button {% if modo == 'resumen' %}style="font-weight:bold;"{% endif %}>
-            Resumen
+            Por vehiculo
         </button>
     </a>
     <a style="margin-left: 10px;" href="/infracciones_asignadas">
