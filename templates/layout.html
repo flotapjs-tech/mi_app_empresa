@@ -22,20 +22,20 @@
         }
 
         .sidebar-header {
-            height: 110px;
-            padding: 15px 0;
+            height: 110px;          /* reserva espacio */
             display: flex;
-            align-items: center;
             justify-content: center;
-            box-sizing: border-box;
+            align-items: center;
+            margin-bottom: 20px;
+            overflow: hidden;       /* evita micro-flash lateral */
             flex-shrink: 0;
         }
 
         .sidebar-logo {
-            width: 140px;
-            height: 70px;      /* fijo */
-            object-fit: contain;
+            width: 140px;          /* tu tamaño original */
+            height: auto;
             display: block;
+            max-width: 100%;
         }
 
         .sidebar h2 {
@@ -154,13 +154,12 @@
 
 <div class="sidebar">
     <div class="sidebar-header">
-        <img
-            class="sidebar-logo"
-            src="{{ url_for('static', filename='img/logo.png') }}"
-            alt="Logo empresa"
-            loading="eager"
-            decoding="sync"
-        >
+            <img
+                class="sidebar-logo"
+                src="{{ url_for('static', filename='img/logo.png') }}"
+                alt="Logo empresa"
+                width="140"
+            >
     </div>
     <p style="text-align: center;"> {{ session["usuario"] }}</p>
     <a href="/">🏠 Inicio</a>
