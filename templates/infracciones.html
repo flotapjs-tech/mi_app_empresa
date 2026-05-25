@@ -56,6 +56,7 @@
 
 </form>
 <hr>
+<div style="margin-bottom: 8px; margin-right: 8px;">
     <a href="{{ url_for('infracciones', modo='detalle') }}">
         <button {% if modo == 'detalle' %}style="font-weight:bold;"{% endif %}>
             Detalle
@@ -70,6 +71,7 @@
     <a href="/infracciones_asignadas">
          <button type="button">Asignadas</button>
     </a>
+</div>    
 
 
 {% if modo == 'detalle' %}
