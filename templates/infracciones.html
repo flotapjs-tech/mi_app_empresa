@@ -56,19 +56,19 @@
 
 </form>
 <hr>
-<div style="margin-bottom: 8px; margin-right: 8px;">
-    <a href="{{ url_for('infracciones', modo='detalle') }}">
+<div style="margin-bottom: 8px;">
+    <a style="margin-left: 10px;" href="{{ url_for('infracciones', modo='detalle') }}">
         <button {% if modo == 'detalle' %}style="font-weight:bold;"{% endif %}>
             Detalle
         </button>
     </a>
 
-    <a href="{{ url_for('infracciones', modo='resumen') }}">
+    <a style="margin-left: 10px;" href="{{ url_for('infracciones', modo='resumen') }}">
         <button {% if modo == 'resumen' %}style="font-weight:bold;"{% endif %}>
             Resumen
         </button>
     </a>
-    <a href="/infracciones_asignadas">
+    <a style="margin-left: 10px;" href="/infracciones_asignadas">
          <button type="button">Asignadas</button>
     </a>
 </div>    
