@@ -21,22 +21,7 @@
             box-sizing: border-box;
         }
 
-        .sidebar-header {
-            height: 110px;          /* reserva espacio */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 20px;
-            overflow: hidden;       /* evita micro-flash lateral */
-            flex-shrink: 0;
-        }
-
-        .sidebar-logo {
-            width: 140px;          /* tu tamaño original */
-            height: auto;
-            display: block;
-            max-width: 100%;
-        }
+        
 
         .sidebar h2 {
             text-align: center;
@@ -153,13 +138,8 @@
 <body>
 
 <div class="sidebar">
-    <div class="sidebar-header">
-            <img
-                class="sidebar-logo"
-                src="{{ url_for('static', filename='img/logo.png') }}"
-                alt="Logo empresa"
-                width="140"
-            >
+    <div style="text-align: center; margin-bottom: 20px;">
+        <img src="{{ url_for('static', filename='img/logo.webp') }}" width="140">
     </div>
     <p style="text-align: center;"> {{ session["usuario"] }}</p>
     <a href="/">🏠 Inicio</a>
