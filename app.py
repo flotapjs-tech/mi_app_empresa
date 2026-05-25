@@ -2449,7 +2449,6 @@ def marcar_pagada(id):
 @app.route('/alertas')
 @login_requerido
 def alertas():
-
     from datetime import datetime, timedelta
 
     conn = get_connection()
@@ -2458,25 +2457,28 @@ def alertas():
     hoy = datetime.today().date()
     limite = hoy + timedelta(days=7)
 
-    
-
-    # LICENCIAS
+    # =========================
+    # LICENCIAS DE CONDUCTORES
+    # =========================
     cursor.execute("""
-        SELECT nombre, licencia_vencimiento AS fecha
+        SELECT
+            nombre,
+            NULLIF(licencia_vencimiento::text, '')::date AS fecha
         FROM conductores
-        WHERE licencia_vencimiento IS NOT NULL
-        AND date(licencia_vencimiento) <= %s
-        ORDER BY licencia_vencimiento
+        WHERE NULLIF(licencia_vencimiento::text, '') IS NOT NULL
+          AND NULLIF(licencia_vencimiento::text, '')::date <= %s
+        ORDER BY fecha
     """, (limite,))
+
     licencias_raw = cursor.fetchall()
 
     licencias = []
     for l in licencias_raw:
         l = dict(l)
 
-        if l["fecha"]:
-            fecha = l["fecha"]
+        fecha = l["fecha"]
 
+        if fecha:
             if isinstance(fecha, str):
                 fecha = datetime.strptime(fecha, "%Y-%m-%d").date()
 
@@ -2487,33 +2489,35 @@ def alertas():
 
         licencias.append(l)
 
-    # VEHÍCULOS
+    # =========================
+    # VENCIMIENTOS VEHÍCULOS
+    # =========================
     cursor.execute("""
-        SELECT patente, 'VTV' as tipo, NULLIF(vtv, '')::date as fecha
+        SELECT patente, 'VTV' AS tipo, NULLIF(vtv, '')::date AS fecha
         FROM vehiculos
         WHERE NULLIF(vtv, '') IS NOT NULL
-        AND NULLIF(vtv, '')::date <= %s
+          AND NULLIF(vtv, '')::date <= %s
 
         UNION ALL
 
-        SELECT patente, 'REMIS' as tipo, NULLIF(remis, '')::date as fecha
+        SELECT patente, 'REMIS' AS tipo, NULLIF(remis, '')::date AS fecha
         FROM vehiculos
         WHERE NULLIF(remis, '') IS NOT NULL
-        AND NULLIF(remis, '')::date <= %s
+          AND NULLIF(remis, '')::date <= %s
 
         UNION ALL
 
-        SELECT patente, 'GNC' as tipo, NULLIF(gnc, '')::date as fecha
+        SELECT patente, 'GNC' AS tipo, NULLIF(gnc, '')::date AS fecha
         FROM vehiculos
         WHERE NULLIF(gnc, '') IS NOT NULL
-        AND NULLIF(gnc, '')::date <= %s
+          AND NULLIF(gnc, '')::date <= %s
 
         UNION ALL
 
-        SELECT patente, 'TUBO' as tipo, NULLIF(tubo, '')::date as fecha
+        SELECT patente, 'TUBO' AS tipo, NULLIF(tubo, '')::date AS fecha
         FROM vehiculos
         WHERE NULLIF(tubo, '') IS NOT NULL
-        AND NULLIF(tubo, '')::date <= %s
+          AND NULLIF(tubo, '')::date <= %s
 
         ORDER BY fecha
     """, (limite, limite, limite, limite))
@@ -2524,9 +2528,9 @@ def alertas():
     for v in vehiculos_raw:
         v = dict(v)
 
-        if v["fecha"]:
-            fecha = v["fecha"]
+        fecha = v["fecha"]
 
+        if fecha:
             if isinstance(fecha, str):
                 fecha = datetime.strptime(fecha, "%Y-%m-%d").date()
 
@@ -2537,47 +2541,17 @@ def alertas():
 
         vehiculos.append(v)
 
-    # INFRACCIONES
-    '''
-    cursor.execute("""
-        SELECT numero, monto, fecha_vencimiento AS fecha
-        FROM infracciones
-        WHERE fecha_vencimiento IS NOT NULL
-        AND date(fecha_vencimiento) <= %s
-        ORDER BY fecha_vencimiento
-    """, (limite,))
-    infracciones_raw = cursor.fetchall()
-
-    infracciones = []
-    for i in infracciones_raw:
-        i = dict(i)
-
-        if i["fecha"]:
-            fecha = i["fecha"]
-
-            if isinstance(fecha, str):
-                fecha = datetime.strptime(fecha, "%Y-%m-%d").date()
-
-            i["fecha"] = fecha
-            i["vencido"] = fecha <= hoy
-        else:
-            i["vencido"] = False
-
-        infracciones.append(i)  '''
-
-
     conn.close()
 
-    total = len(licencias) + len(vehiculos) 
+    total = len(licencias) + len(vehiculos)
 
     return render_template(
-        'alertas.html',
+        "alertas.html",
         licencias=licencias,
         vehiculos=vehiculos,
         total=total,
         hoy=hoy
     )
-
 
 @app.context_processor
 def alertas_global():
