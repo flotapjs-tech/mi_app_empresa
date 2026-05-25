@@ -34,10 +34,16 @@
             flex-shrink: 0;
         }
 
+        
+
         .logo {
-            width: 140px;              /* mismo tamaño que tenías */
-            height: auto;
+            width: 140px;
+            height: 140px;
+            object-fit: contain;
             display: block;
+            image-rendering: auto;
+            backface-visibility: hidden;
+            transform: translateZ(0);
         }
 
         .usuario {
