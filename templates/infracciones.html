@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<h3>📥 Importar infracciones</h3>
+<h2>📥 Importar infracciones</h2>
 
 <form method="POST" action="/importar_infracciones">
     
@@ -20,10 +20,7 @@
         <option value="Provincia">Provincia</option>
     </select>
     <br>
-    <label style="display: inline-block;">Pegar datos:</label><br>
     <textarea name="texto" style="display: inline-block;" rows="3" cols="80" placeholder="Pegá acá las infracciones"></textarea>
-
-    <br><br>
 
     <button type="submit">Importar</button>
 </form>
