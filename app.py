@@ -2476,6 +2476,7 @@ def peajes():
 
             # LIMPIAR COLUMNAS
             df.columns = df.columns.str.strip()
+            print(df.columns)
 
             for _, fila in df.iterrows():
 
