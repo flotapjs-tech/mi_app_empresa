@@ -13,6 +13,8 @@ from werkzeug.utils import secure_filename
 import re
 import hashlib
 from psycopg2.extras import RealDictCursor
+import pandas as pd
+from datetime import datetime, timedelta
 
 
 app = Flask(__name__)
@@ -2445,6 +2447,132 @@ def marcar_pagada(id):
 
     return redirect(request.referrer)
 
+@app.route("/peajes", methods=["GET", "POST"])
+@login_requerido
+def peajes():
+
+    import pandas as pd
+    from datetime import datetime, timedelta
+
+    resultados = []
+    resumen_final = []
+
+    if request.method == "POST":
+
+        archivo = request.files["archivo"]
+
+        fecha_desde = request.form.get("fecha_desde")
+        fecha_hasta = request.form.get("fecha_hasta")
+
+        hora_desde = request.form.get("hora_desde")
+        hora_hasta = request.form.get("hora_hasta")
+
+        patente_filtro = request.form.get("patente")
+
+        if archivo:
+
+            # LEER EXCEL
+            df = pd.read_excel(archivo)
+
+            # LIMPIAR COLUMNAS
+            df.columns = df.columns.str.strip()
+
+            for _, fila in df.iterrows():
+
+                try:
+
+                    fecha_str = str(fila["FECHA"]).strip()
+                    hora_str = str(fila["HORA"]).strip()
+
+                    patente = str(fila["PATENTE"]).strip()
+
+                    tarifa_str = str(fila["TARIFA"]).strip()
+
+                    # FECHA
+                    fecha = datetime.strptime(fecha_str, "%d/%m/%Y")
+
+                    # HORA
+                    hora = datetime.strptime(hora_str, "%H:%M:%S").time()
+
+                    # FILTRO FECHAS
+                    if fecha_desde:
+                        fd = datetime.strptime(fecha_desde, "%Y-%m-%d")
+                        if fecha < fd:
+                            continue
+
+                    if fecha_hasta:
+                        fh = datetime.strptime(fecha_hasta, "%Y-%m-%d")
+                        if fecha > fh:
+                            continue
+
+                    # FILTRO HORAS
+                    if hora_desde:
+                        hd = datetime.strptime(hora_desde, "%H:%M").time()
+                        if hora < hd:
+                            continue
+
+                    if hora_hasta:
+                        hh = datetime.strptime(hora_hasta, "%H:%M").time()
+                        if hora > hh:
+                            continue
+
+                    # FILTRO PATENTE
+                    if patente_filtro:
+                        if patente.upper() != patente_filtro.upper():
+                            continue
+
+                    # SEMANA
+                    lunes = fecha - timedelta(days=fecha.weekday())
+                    domingo = lunes + timedelta(days=6)
+
+                    semana = f"{lunes.strftime('%d/%m/%Y')} al {domingo.strftime('%d/%m/%Y')}"
+
+                    # TARIFA
+                    tarifa = (
+                        tarifa_str
+                        .replace(".", "")
+                        .replace(",", ".")
+                    )
+
+                    tarifa = float(tarifa)
+
+                    resultados.append({
+                        "fecha": fecha.strftime("%d/%m/%Y"),
+                        "hora": hora.strftime("%H:%M:%S"),
+                        "patente": patente,
+                        "tarifa": tarifa,
+                        "semana": semana
+                    })
+
+                except Exception as e:
+                    print("ERROR FILA:", e)
+
+    # AGRUPAR
+    resumen = {}
+
+    for r in resultados:
+
+        clave = (r["semana"], r["patente"])
+
+        if clave not in resumen:
+
+            resumen[clave] = {
+                "semana": r["semana"],
+                "patente": r["patente"],
+                "cantidad": 0,
+                "total": 0
+            }
+
+        resumen[clave]["cantidad"] += 1
+        resumen[clave]["total"] += r["tarifa"]
+
+    resumen_final = list(resumen.values())
+
+    return render_template(
+        "peajes.html",
+        resultados=resultados,
+        resumen=resumen_final
+    )
 
 @app.route('/alertas')
 @login_requerido

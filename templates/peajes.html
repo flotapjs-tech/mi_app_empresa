@@ -1,0 +1,94 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<h2>Peajes</h2>
+
+<form method="POST" enctype="multipart/form-data">
+
+    <input type="file" name="archivo" required>
+
+    <br><br>
+
+    <label>Fecha desde</label>
+    <input type="date" name="fecha_desde">
+
+    <label>Fecha hasta</label>
+    <input type="date" name="fecha_hasta">
+
+    <br><br>
+
+    <label>Hora desde</label>
+    <input type="time" name="hora_desde">
+
+    <label>Hora hasta</label>
+    <input type="time" name="hora_hasta">
+
+    <br><br>
+
+    <label>Patente</label>
+    <input type="text" name="patente">
+
+    <br><br>
+
+    <button type="submit">
+        Procesar
+    </button>
+
+</form>
+
+<br><br>
+
+<h3>Resumen semanal</h3>
+
+<table border="1" cellpadding="5">
+
+    <tr>
+        <th>Semana</th>
+        <th>Patente</th>
+        <th>Cantidad</th>
+        <th>Total</th>
+    </tr>
+
+    {% for r in resumen %}
+
+    <tr>
+        <td>{{ r.semana }}</td>
+        <td>{{ r.patente }}</td>
+        <td>{{ r.cantidad }}</td>
+        <td>${{ "%.2f"|format(r.total) }}</td>
+    </tr>
+
+    {% endfor %}
+
+</table>
+
+<br><br>
+
+<h3>Detalle</h3>
+
+<table border="1" cellpadding="5">
+
+    <tr>
+        <th>Fecha</th>
+        <th>Hora</th>
+        <th>Patente</th>
+        <th>Tarifa</th>
+        <th>Semana</th>
+    </tr>
+
+    {% for r in resultados %}
+
+    <tr>
+        <td>{{ r.fecha }}</td>
+        <td>{{ r.hora }}</td>
+        <td>{{ r.patente }}</td>
+        <td>${{ "%.2f"|format(r.tarifa) }}</td>
+        <td>{{ r.semana }}</td>
+    </tr>
+
+    {% endfor %}
+
+</table>
+
+{% endblock %}
