@@ -2482,8 +2482,8 @@ def peajes():
 
                 try:
 
-                    fecha_str = str(fila["FECHA"]).strip()
-                    hora_str = str(fila["HORA"]).strip()
+                    fecha_str = pd.to_datetime(fila["Fecha"]).date()
+                    hora_str = pd.to_datetime(fila["Hora"]).time()
 
                     patente = str(fila["PATENTE"]).strip()
 
