@@ -2472,7 +2472,7 @@ def peajes():
         if archivo:
 
             # LEER EXCEL
-            df = pd.read_excel(archivo)
+            df = pd.read_csv(archivo, sep=";", encoding="latin1")
 
             # LIMPIAR COLUMNAS
             df.columns = df.columns.str.strip()
