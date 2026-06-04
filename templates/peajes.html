@@ -4,7 +4,7 @@
 
 <h1>📍 Peajes</h1>
 
-<div class="card">
+<div>
 
     <form method="POST" enctype="multipart/form-data">
 
@@ -38,6 +38,11 @@
     </form>
 
 </div>
+
+<p>
+Resultados encontrados:
+{{ resultados|length }}
+</p>
 
 {% if resumen %}
 

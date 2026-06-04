@@ -2595,10 +2595,21 @@ def peajes():
                             hora_inicio = a["hora_inicio"]
                             hora_fin = a["hora_fin"]
 
-                            if hora_inicio <= hora <= hora_fin:
+                            # TURNO NORMAL
+                            if hora_inicio <= hora_fin:
 
-                                conductor = a["conductor"]
-                                break
+                                if hora_inicio <= hora <= hora_fin:
+
+                                    conductor = a["conductor"]
+                                    break
+
+                            # TURNOS QUE CRUZAN MEDIANOCHE
+                            else:
+
+                                if hora >= hora_inicio or hora <= hora_fin:
+
+                                    conductor = a["conductor"]
+                                    break
 
                     # SEMANA
                     lunes = fecha - timedelta(
@@ -2612,6 +2623,8 @@ def peajes():
                         f"al "
                         f"{domingo.strftime('%d/%m/%Y')}"
                     )
+
+                    print("AGREGANDO:", patente, conductor, tarifa)
 
                     resultados.append({
                         "fecha": fecha.strftime("%d/%m/%Y"),
