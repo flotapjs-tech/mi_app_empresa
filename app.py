@@ -2457,6 +2457,9 @@ def peajes():
     resultados = []
     resumen_final = []
 
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
     if request.method == "POST":
 
         archivo = request.files["archivo"]
@@ -2471,95 +2474,175 @@ def peajes():
 
         if archivo:
 
-            # LEER EXCEL
-            df = pd.read_csv(archivo, sep=";", encoding="latin1")
+            # CSV
+            df = pd.read_csv(
+                archivo,
+                sep=";",
+                encoding="latin1"
+            )
 
             # LIMPIAR COLUMNAS
             df.columns = df.columns.str.strip()
-            print(df.columns)
+
+            # ASIGNACIONES
+            cursor.execute("""
+                SELECT
+                    a.*,
+                    c.nombre as conductor
+                FROM asignaciones a
+                LEFT JOIN conductores c
+                    ON c.id = a.conductor_id
+            """)
+
+            asignaciones = cursor.fetchall()
 
             for _, fila in df.iterrows():
 
                 try:
 
-                    fecha_str = pd.to_datetime(fila["FECHA"]).date()
-                    hora_str = pd.to_datetime(fila["HORA"]).time()
+                    # FECHA Y HORA
+                    fecha = pd.to_datetime(
+                        fila["FECHA"]
+                    ).date()
 
-                    patente = str(fila["PATENTE"]).strip()
+                    hora = pd.to_datetime(
+                        fila["HORA"]
+                    ).time()
 
-                    tarifa_str = str(fila["TARIFA"]).strip()
+                    patente = str(
+                        fila["PATENTE"]
+                    ).strip().upper()
 
-                    # FECHA
-                    fecha = pd.to_datetime(fila["FECHA"]).date()
-
-                    # HORA
-                    hora = pd.to_datetime(fila["HORA"]).time()
+                    tarifa = float(
+                        str(fila["TARIFA"])
+                        .replace(".", "")
+                        .replace(",", ".")
+                    )
 
                     # FILTRO FECHAS
                     if fecha_desde:
-                        fd = datetime.strptime(fecha_desde, "%Y-%m-%d")
+
+                        fd = datetime.strptime(
+                            fecha_desde,
+                            "%Y-%m-%d"
+                        ).date()
+
                         if fecha < fd:
                             continue
 
                     if fecha_hasta:
-                        fh = datetime.strptime(fecha_hasta, "%Y-%m-%d")
+
+                        fh = datetime.strptime(
+                            fecha_hasta,
+                            "%Y-%m-%d"
+                        ).date()
+
                         if fecha > fh:
                             continue
 
                     # FILTRO HORAS
                     if hora_desde:
-                        hd = datetime.strptime(hora_desde, "%H:%M").time()
+
+                        hd = datetime.strptime(
+                            hora_desde,
+                            "%H:%M"
+                        ).time()
+
                         if hora < hd:
                             continue
 
                     if hora_hasta:
-                        hh = datetime.strptime(hora_hasta, "%H:%M").time()
+
+                        hh = datetime.strptime(
+                            hora_hasta,
+                            "%H:%M"
+                        ).time()
+
                         if hora > hh:
                             continue
 
                     # FILTRO PATENTE
                     if patente_filtro:
-                        if patente.upper() != patente_filtro.upper():
+
+                        if patente != patente_filtro.upper():
                             continue
 
+                    # BUSCAR CONDUCTOR
+                    conductor = "Sin asignar"
+
+                    for a in asignaciones:
+
+                        patente_asig = (
+                            str(a["vehiculo_patente"])
+                            .strip()
+                            .upper()
+                        )
+
+                        if patente != patente_asig:
+                            continue
+
+                        fecha_inicio = a["fecha_inicio"]
+                        fecha_fin = a["fecha_fin"]
+
+                        if isinstance(fecha_inicio, datetime):
+                            fecha_inicio = fecha_inicio.date()
+
+                        if isinstance(fecha_fin, datetime):
+                            fecha_fin = fecha_fin.date()
+
+                        if fecha_inicio <= fecha <= fecha_fin:
+
+                            hora_inicio = a["hora_inicio"]
+                            hora_fin = a["hora_fin"]
+
+                            if hora_inicio <= hora <= hora_fin:
+
+                                conductor = a["conductor"]
+                                break
+
                     # SEMANA
-                    lunes = fecha - timedelta(days=fecha.weekday())
-                    domingo = lunes + timedelta(days=6)
-
-                    semana = f"{lunes.strftime('%d/%m/%Y')} al {domingo.strftime('%d/%m/%Y')}"
-
-                    # TARIFA
-                    tarifa = (
-                        tarifa_str
-                        .replace(".", "")
-                        .replace(",", ".")
+                    lunes = fecha - timedelta(
+                        days=fecha.weekday()
                     )
 
-                    tarifa = float(tarifa)
+                    domingo = lunes + timedelta(days=6)
+
+                    semana = (
+                        f"{lunes.strftime('%d/%m/%Y')} "
+                        f"al "
+                        f"{domingo.strftime('%d/%m/%Y')}"
+                    )
 
                     resultados.append({
                         "fecha": fecha.strftime("%d/%m/%Y"),
                         "hora": hora.strftime("%H:%M:%S"),
                         "patente": patente,
+                        "conductor": conductor,
                         "tarifa": tarifa,
                         "semana": semana
                     })
 
                 except Exception as e:
+
                     print("ERROR FILA:", e)
 
-    # AGRUPAR
+    # RESUMEN
     resumen = {}
 
     for r in resultados:
 
-        clave = (r["semana"], r["patente"])
+        clave = (
+            r["semana"],
+            r["patente"],
+            r["conductor"]
+        )
 
         if clave not in resumen:
 
             resumen[clave] = {
                 "semana": r["semana"],
                 "patente": r["patente"],
+                "conductor": r["conductor"],
                 "cantidad": 0,
                 "total": 0
             }
@@ -2568,6 +2651,8 @@ def peajes():
         resumen[clave]["total"] += r["tarifa"]
 
     resumen_final = list(resumen.values())
+
+    conn.close()
 
     return render_template(
         "peajes.html",
