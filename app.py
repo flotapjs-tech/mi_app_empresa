@@ -2502,8 +2502,7 @@ def peajes():
 
                     # FECHA
                     fecha = pd.to_datetime(
-                        fila["FECHA"],
-                        dayfirst=True
+                        fila["FECHA"]
                     ).date()
 
                     # HORA
