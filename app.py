@@ -2490,10 +2490,10 @@ def peajes():
                     tarifa_str = str(fila["TARIFA"]).strip()
 
                     # FECHA
-                    fecha = datetime.strptime(fecha_str, "%d/%m/%Y")
+                    fecha = pd.to_datetime(fila["FECHA"]).date()
 
                     # HORA
-                    hora = datetime.strptime(hora_str, "%H:%M:%S").time()
+                    hora = pd.to_datetime(fila["HORA"]).time()
 
                     # FILTRO FECHAS
                     if fecha_desde:
