@@ -2500,24 +2500,36 @@ def peajes():
 
                 try:
 
-                    # FECHA Y HORA
+                    # FECHA
                     fecha = pd.to_datetime(
-                        fila["FECHA"]
+                        fila["FECHA"],
+                        dayfirst=True
                     ).date()
 
+                    # HORA
                     hora = pd.to_datetime(
-                        fila["HORA"]
+                        str(fila["HORA"])
                     ).time()
 
-                    patente = str(
-                        fila["PATENTE"]
-                    ).strip().upper()
+                    # PATENTE
+                    patente = (
+                        str(fila["PATENTE"])
+                        .upper()
+                        .replace("-", "")
+                        .replace(" ", "")
+                        .strip()
+                    )
 
-                    tarifa = float(
+                    # TARIFA
+                    tarifa_str = (
                         str(fila["TARIFA"])
+                        .replace("$", "")
                         .replace(".", "")
                         .replace(",", ".")
+                        .strip()
                     )
+
+                    tarifa = float(tarifa_str)
 
                     # FILTRO FECHAS
                     if fecha_desde:
@@ -2564,58 +2576,19 @@ def peajes():
                     # FILTRO PATENTE
                     if patente_filtro:
 
-                        if patente != patente_filtro.upper():
-                            continue
-
-                    # BUSCAR CONDUCTOR
-                    conductor = "Sin asignar"
-
-                    for a in asignaciones:
-
-                        patente_asig = (
-                            str(a["vehiculo_patente"])
-                            .strip()
+                        pf = (
+                            patente_filtro
                             .upper()
+                            .replace("-", "")
+                            .replace(" ", "")
+                            .strip()
                         )
 
-                        if patente != patente_asig:
+                        if patente != pf:
                             continue
 
-                        fecha_inicio = a["fecha_inicio"]
-                        fecha_fin = a["fecha_fin"]
-
-                        if isinstance(fecha_inicio, datetime):
-                            fecha_inicio = fecha_inicio.date()
-
-                        if isinstance(fecha_fin, datetime):
-                            fecha_fin = fecha_fin.date()
-
-                        if fecha_inicio <= fecha <= fecha_fin:
-
-                            hora_inicio = a["hora_inicio"]
-                            hora_fin = a["hora_fin"]
-
-                            # TURNO NORMAL
-                            if hora_inicio <= hora_fin:
-
-                                if hora_inicio <= hora <= hora_fin:
-
-                                    conductor = a["conductor"]
-                                    break
-
-                            # TURNOS QUE CRUZAN MEDIANOCHE
-                            else:
-
-                                if hora >= hora_inicio or hora <= hora_fin:
-
-                                    conductor = a["conductor"]
-                                    break
-
                     # SEMANA
-                    lunes = fecha - timedelta(
-                        days=fecha.weekday()
-                    )
-
+                    lunes = fecha - timedelta(days=fecha.weekday())
                     domingo = lunes + timedelta(days=6)
 
                     semana = (
@@ -2624,19 +2597,15 @@ def peajes():
                         f"{domingo.strftime('%d/%m/%Y')}"
                     )
 
-                    print("AGREGANDO:", patente, conductor, tarifa)
-
                     resultados.append({
                         "fecha": fecha.strftime("%d/%m/%Y"),
                         "hora": hora.strftime("%H:%M:%S"),
                         "patente": patente,
-                        "conductor": conductor,
                         "tarifa": tarifa,
                         "semana": semana
                     })
 
                 except Exception as e:
-
                     print("ERROR FILA:", e)
 
     # RESUMEN
