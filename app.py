@@ -2540,7 +2540,7 @@ def peajes():
                             cursor,
                             vehiculo_id,
                             fecha,
-                            hora
+                            hora[:5]
                         )
 
                         # 🔥 obtener turno
@@ -2589,7 +2589,7 @@ def peajes():
                     ))
 
                 except Exception as e:
-                    
+
                     conn.rollback()
 
                     print("ERROR FILA:", e)
