@@ -4,7 +4,7 @@
 
 <h2>Peajes</h2>
 
-<div class="card">
+<div >
 
     <form method="POST" enctype="multipart/form-data">
 
@@ -25,9 +25,71 @@
 
 <br>
 
+<div >
+
+    <form method="GET">
+
+        <label>Desde:</label>
+
+        <input
+            type="date"
+            name="desde"
+            value="{{ desde or '' }}"
+        >
+
+        <label>Hasta:</label>
+
+        <input
+            type="date"
+            name="hasta"
+            value="{{ hasta or '' }}"
+        >
+
+        <button type="submit">
+            Filtrar
+        </button>
+
+    </form>
+
+</div>
+
+<br>
+
 <div class="card">
 
-<table class="tabla">
+    <h3>Resumen por conductor</h3>
+
+    <table class="tabla">
+
+        <tr>
+            <th>Conductor</th>
+            <th>Cantidad</th>
+            <th>Total</th>
+        </tr>
+
+        {% for r in resumen %}
+
+        <tr>
+
+            <td>{{ r.conductor }}</td>
+
+            <td>{{ r.cantidad }}</td>
+
+            <td>${{ r.total }}</td>
+
+        </tr>
+
+        {% endfor %}
+
+    </table>
+
+</div>
+
+<br>
+
+<div >
+
+<table class="table">
 
     <tr>
         <th>Fecha</th>

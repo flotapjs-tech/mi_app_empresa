@@ -2597,22 +2597,82 @@ def peajes():
             conn.commit()
 
     # =========================
-    # TRAER REGISTROS
+    # FILTROS
     # =========================
-    cursor.execute("""
+
+    desde = request.args.get("desde")
+    hasta = request.args.get("hasta")
+
+    query = """
         SELECT *
         FROM peajes
+        WHERE 1=1
+    """
+
+    params = []
+
+    if desde:
+
+        query += " AND fecha >= %s"
+        params.append(desde)
+
+    if hasta:
+
+        query += " AND fecha <= %s"
+        params.append(hasta)
+
+    query += """
         ORDER BY fecha DESC, hora DESC
         LIMIT 300
-    """)
+    """
+
+    cursor.execute(query, params)
 
     registros = cursor.fetchall()
 
-    conn.close()
+    # =========================
+    # RESUMEN POR CONDUCTOR
+    # =========================
+
+    query_resumen = """
+        SELECT
+            conductor,
+            COUNT(*) as cantidad,
+            SUM(tarifa) as total
+        FROM peajes
+        WHERE conductor IS NOT NULL
+    """
+
+    params_resumen = []
+
+    if desde:
+
+        query_resumen += " AND fecha >= %s"
+        params_resumen.append(desde)
+
+    if hasta:
+
+        query_resumen += " AND fecha <= %s"
+        params_resumen.append(hasta)
+
+    query_resumen += """
+        GROUP BY conductor
+        ORDER BY total DESC
+    """
+
+    cursor.execute(
+        query_resumen,
+        params_resumen
+    )
+
+    resumen = cursor.fetchall()
 
     return render_template(
         "peajes.html",
-        registros=registros
+        registros=registros,
+        resumen=resumen,
+        desde=desde,
+        hasta=hasta
     )
 
 @app.route('/alertas')
