@@ -2497,7 +2497,10 @@ def peajes():
 
         if archivo:
 
-            df = pd.read_csv(archivo)
+            df = pd.read_csv(
+                archivo,
+                sep=";"
+                )
             df.columns = df.columns.str.strip().str.upper()
 
             print(df.columns)
@@ -2586,6 +2589,8 @@ def peajes():
                     ))
 
                 except Exception as e:
+                    
+                    conn.rollback()
 
                     print("ERROR FILA:", e)
 
