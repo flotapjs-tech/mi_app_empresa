@@ -118,7 +118,41 @@ def login_requerido(f):
         return f(*args, **kwargs)
     return funcion_protegida
 
+def normalizar_hora(hora):
 
+    hora = str(hora).strip()
+
+    # excel suele agregar .0
+    hora = hora.replace(".0", "")
+
+    # si viene sin :
+    if ":" not in hora:
+
+        # completa ceros adelante
+        hora = hora.zfill(6)
+
+        return f"{hora[:2]}:{hora[2:4]}:{hora[4:6]}"
+
+    return hora
+
+
+def normalizar_tarifa(valor):
+
+    valor = str(valor).strip()
+
+    # formato tipo $4.177,59
+    if "$" in valor or "," in valor:
+
+        valor = valor.replace("$", "")
+        valor = valor.replace(".", "")
+        valor = valor.replace(",", ".")
+
+    return float(valor)
+
+
+def limpiar_patente(patente):
+
+    return str(patente).strip().upper()
 
 # Crear base de datos si no existe
 '''def crear_db():
@@ -2451,194 +2485,132 @@ def marcar_pagada(id):
 @login_requerido
 def peajes():
 
-    import pandas as pd
-    from datetime import datetime, timedelta
-
-    resultados = []
-    resumen_final = []
-
     conn = get_connection()
-    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    cursor = conn.cursor()
 
+    # =========================
+    # SUBIR CSV
+    # =========================
     if request.method == "POST":
 
         archivo = request.files["archivo"]
 
-        fecha_desde = request.form.get("fecha_desde")
-        fecha_hasta = request.form.get("fecha_hasta")
-
-        hora_desde = request.form.get("hora_desde")
-        hora_hasta = request.form.get("hora_hasta")
-
-        patente_filtro = request.form.get("patente")
-
         if archivo:
 
-            # CSV
-            df = pd.read_csv(
-                archivo,
-                sep=";",
-                encoding="latin1"
-            )
+            df = pd.read_csv(archivo)
 
-            # LIMPIAR COLUMNAS
-            df.columns = df.columns.str.strip()
-
-            # ASIGNACIONES
-            cursor.execute("""
-                SELECT
-                    a.*,
-                    c.nombre as conductor
-                FROM asignaciones a
-                LEFT JOIN conductores c
-                    ON c.id = a.conductor_id
-            """)
-
-            asignaciones = cursor.fetchall()
-
-            for _, fila in df.iterrows():
+            for _, row in df.iterrows():
 
                 try:
 
-                    # FECHA
-                    fecha = pd.to_datetime(
-                        fila["FECHA"]
-                    ).date()
+                    fecha = str(row["FECHA"]).strip()
 
-                    # HORA
-                    hora = pd.to_datetime(
-                        str(fila["HORA"])
-                    ).time()
-
-                    # PATENTE
-                    patente = (
-                        str(fila["PATENTE"])
-                        .upper()
-                        .replace("-", "")
-                        .replace(" ", "")
-                        .strip()
+                    hora = normalizar_hora(
+                        row["HORA"]
                     )
 
-                    # TARIFA
-                    tarifa_str = (
-                        str(fila["TARIFA"])
-                        .replace("$", "")
-                        .replace(".", "")
-                        .replace(",", ".")
-                        .strip()
+                    patente = limpiar_patente(
+                        row["PATENTE"]
                     )
 
-                    tarifa = float(tarifa_str)
+                    tarifa = normalizar_tarifa(
+                        row["TARIFA"]
+                    )
 
-                    # FILTRO FECHAS
-                    if fecha_desde:
+                    conductor = None
+                    conductor_id = None
+                    vehiculo_id = None
+                    turno = None
 
-                        fd = datetime.strptime(
-                            fecha_desde,
-                            "%Y-%m-%d"
-                        ).date()
+                    # 🔥 buscar vehículo
+                    cursor.execute("""
+                        SELECT id
+                        FROM vehiculos
+                        WHERE UPPER(patente) = %s
+                    """, (patente,))
 
-                        if fecha < fd:
-                            continue
+                    vehiculo = cursor.fetchone()
 
-                    if fecha_hasta:
+                    if vehiculo:
 
-                        fh = datetime.strptime(
-                            fecha_hasta,
-                            "%Y-%m-%d"
-                        ).date()
+                        vehiculo_id = vehiculo["id"]
 
-                        if fecha > fh:
-                            continue
-
-                    # FILTRO HORAS
-                    if hora_desde:
-
-                        hd = datetime.strptime(
-                            hora_desde,
-                            "%H:%M"
-                        ).time()
-
-                        if hora < hd:
-                            continue
-
-                    if hora_hasta:
-
-                        hh = datetime.strptime(
-                            hora_hasta,
-                            "%H:%M"
-                        ).time()
-
-                        if hora > hh:
-                            continue
-
-                    # FILTRO PATENTE
-                    if patente_filtro:
-
-                        pf = (
-                            patente_filtro
-                            .upper()
-                            .replace("-", "")
-                            .replace(" ", "")
-                            .strip()
+                        # 🔥 buscar conductor automático
+                        conductor_id = buscar_conductor_automatico(
+                            cursor,
+                            vehiculo_id,
+                            fecha,
+                            hora
                         )
 
-                        if patente != pf:
-                            continue
+                        # 🔥 obtener turno
+                        turno, _ = obtener_turno_y_fecha(
+                            fecha,
+                            hora[:5]
+                        )
 
-                    # SEMANA
-                    lunes = fecha - timedelta(days=fecha.weekday())
-                    domingo = lunes + timedelta(days=6)
+                        # 🔥 traer nombre conductor
+                        if conductor_id:
 
-                    semana = (
-                        f"{lunes.strftime('%d/%m/%Y')} "
-                        f"al "
-                        f"{domingo.strftime('%d/%m/%Y')}"
-                    )
+                            cursor.execute("""
+                                SELECT nombre
+                                FROM conductores
+                                WHERE id = %s
+                            """, (conductor_id,))
 
-                    resultados.append({
-                        "fecha": fecha.strftime("%d/%m/%Y"),
-                        "hora": hora.strftime("%H:%M:%S"),
-                        "patente": patente,
-                        "tarifa": tarifa,
-                        "semana": semana
-                    })
+                            conductor_data = cursor.fetchone()
+
+                            if conductor_data:
+
+                                conductor = conductor_data["nombre"]
+
+                    # 🔥 guardar peaje
+                    cursor.execute("""
+                        INSERT INTO peajes (
+                            fecha,
+                            hora,
+                            patente,
+                            tarifa,
+                            vehiculo_id,
+                            conductor_id,
+                            conductor,
+                            turno
+                        )
+                        VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+                    """, (
+                        fecha,
+                        hora,
+                        patente,
+                        tarifa,
+                        vehiculo_id,
+                        conductor_id,
+                        conductor,
+                        turno
+                    ))
 
                 except Exception as e:
+
                     print("ERROR FILA:", e)
 
-    # RESUMEN
-    resumen = {}
+            conn.commit()
 
-    for r in resultados:
+    # =========================
+    # TRAER REGISTROS
+    # =========================
+    cursor.execute("""
+        SELECT *
+        FROM peajes
+        ORDER BY fecha DESC, hora DESC
+        LIMIT 300
+    """)
 
-        clave = (
-            r["semana"],
-            r["patente"],
-            r["conductor"]
-        )
-
-        if clave not in resumen:
-
-            resumen[clave] = {
-                "semana": r["semana"],
-                "patente": r["patente"],
-                "conductor": r["conductor"],
-                "cantidad": 0,
-                "total": 0
-            }
-
-        resumen[clave]["cantidad"] += 1
-        resumen[clave]["total"] += r["tarifa"]
-
-    resumen_final = list(resumen.values())
+    registros = cursor.fetchall()
 
     conn.close()
 
     return render_template(
         "peajes.html",
-        resultados=resultados,
-        resumen=resumen_final
+        registros=registros
     )
 
 @app.route('/alertas')

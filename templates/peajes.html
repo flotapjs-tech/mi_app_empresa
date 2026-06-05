@@ -2,155 +2,59 @@
 
 {% block content %}
 
-<h1>📍 Peajes</h1>
+<h2>Peajes</h2>
 
-<div>
+<div class="card">
 
     <form method="POST" enctype="multipart/form-data">
 
-        <input type="file" name="archivo" required>
-
-        <br><br>
-
-        <label>Fecha desde:</label>
-        <input type="date" name="fecha_desde">
-
-        <label>Fecha hasta:</label>
-        <input type="date" name="fecha_hasta">
-
-        <br><br>
-
-        <label>Hora desde:</label>
-        <input type="time" name="hora_desde">
-
-        <label>Hora hasta:</label>
-        <input type="time" name="hora_hasta">
-
-        <br><br>
-
-        <label>Patente:</label>
-        <input type="text" name="patente">
+        <input
+            type="file"
+            name="archivo"
+            accept=".csv"
+            required
+        >
 
         <button type="submit">
-            Procesar Peajes
+            Subir CSV
         </button>
 
     </form>
 
 </div>
 
-<p>
-Resultados encontrados:
-{{ resultados|length }}
-</p>
-
-{% if resumen %}
-
-<div style="
-display:flex;
-gap:20px;
-margin-bottom:20px;
-flex-wrap:wrap;
-">
-
-    <div class="card" style="min-width:220px;">
-        <h3>Total pasadas</h3>
-        <h2>{{ resultados|length }}</h2>
-    </div>
-
-    <div class="card" style="min-width:220px;">
-        <h3>Total gastado</h3>
-
-        <h2>
-            $
-            {{
-                resumen
-                | sum(attribute='total')
-                | round(2)
-            }}
-        </h2>
-    </div>
-
-</div>
+<br>
 
 <div class="card">
 
-    <h2>📊 Resumen semanal</h2>
+<table class="tabla">
 
-    <table>
+    <tr>
+        <th>Fecha</th>
+        <th>Hora</th>
+        <th>Patente</th>
+        <th>Tarifa</th>
+        <th>Turno</th>
+        <th>Conductor</th>
+    </tr>
 
-        <tr>
-            <th>Semana</th>
-            <th>Conductor</th>
-            <th>Patente</th>
-            <th>Cantidad</th>
-            <th>Total</th>
-        </tr>
+    {% for r in registros %}
 
-        {% for r in resumen %}
+    <tr>
 
-        <tr>
+        <td>{{ r.fecha }}</td>
+        <td>{{ r.hora }}</td>
+        <td>{{ r.patente }}</td>
+        <td>${{ r.tarifa }}</td>
+        <td>{{ r.turno }}</td>
+        <td>{{ r.conductor or "-" }}</td>
 
-            <td>{{ r.semana }}</td>
+    </tr>
 
-            <td>{{ r.conductor }}</td>
+    {% endfor %}
 
-            <td>{{ r.patente }}</td>
-
-            <td>{{ r.cantidad }}</td>
-
-            <td>
-                $
-                {{ "%.2f"|format(r.total) }}
-            </td>
-
-        </tr>
-
-        {% endfor %}
-
-    </table>
+</table>
 
 </div>
-
-<div class="card">
-
-    <h2>📄 Detalle completo</h2>
-
-    <table>
-
-        <tr>
-            <th>Fecha</th>
-            <th>Hora</th>
-            <th>Patente</th>
-            <th>Conductor</th>
-            <th>Tarifa</th>
-        </tr>
-
-        {% for r in resultados %}
-
-        <tr>
-
-            <td>{{ r.fecha }}</td>
-
-            <td>{{ r.hora }}</td>
-
-            <td>{{ r.patente }}</td>
-
-            <td>{{ r.conductor }}</td>
-
-            <td>
-                $
-                {{ "%.2f"|format(r.tarifa) }}
-            </td>
-
-        </tr>
-
-        {% endfor %}
-
-    </table>
-
-</div>
-
-{% endif %}
 
 {% endblock %}
