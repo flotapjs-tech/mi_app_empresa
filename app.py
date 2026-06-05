@@ -2498,24 +2498,21 @@ def peajes():
         if archivo:
 
             df = pd.read_csv(archivo)
+            df.columns = df.columns.str.strip().str.upper()
+
+            print(df.columns)
 
             for _, row in df.iterrows():
 
                 try:
 
-                    fecha = str(row["FECHA"]).strip()
+                    fecha = str(row.get("FECHA", "")).strip()
 
-                    hora = normalizar_hora(
-                        row["HORA"]
-                    )
+                    hora = normalizar_hora(row.get("HORA", ""))
 
-                    patente = limpiar_patente(
-                        row["PATENTE"]
-                    )
+                    patente = limpiar_patente(row.get("PATENTE", ""))
 
-                    tarifa = normalizar_tarifa(
-                        row["TARIFA"]
-                    )
+                    tarifa = normalizar_tarifa(row.get("TARIFA", 0))
 
                     conductor = None
                     conductor_id = None
