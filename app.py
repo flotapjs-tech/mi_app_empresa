@@ -2577,6 +2577,15 @@ def peajes():
                             turno
                         )
                         VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+
+                        ON CONFLICT (
+                            fecha,
+                            hora,
+                            patente,
+                            tarifa
+                        )
+
+                        DO NOTHING
                     """, (
                         fecha,
                         hora,
