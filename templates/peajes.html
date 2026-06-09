@@ -83,6 +83,51 @@
 
     </table>
 
+    <div class="card">
+
+    <h3>
+        Peajes sin conductor:
+        {{ sin_conductor|length }}
+    </h3>
+
+    {% if sin_conductor %}
+
+    <table class="tabla">
+
+        <tr>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Patente</th>
+            <th>Tarifa</th>
+        </tr>
+
+        {% for r in sin_conductor %}
+
+        <tr style="background:#3a1f1f;">
+
+            <td>{{ r.fecha }}</td>
+            <td>{{ r.hora }}</td>
+            <td>{{ r.patente }}</td>
+            <td>${{ r.tarifa }}</td>
+
+        </tr>
+
+        {% endfor %}
+
+    </table>
+
+    {% else %}
+
+    <p>
+        ✅ Todos los peajes tienen conductor asignado.
+    </p>
+
+    {% endif %}
+
+</div>
+
+<br>
+
 </div>
 
 <br>

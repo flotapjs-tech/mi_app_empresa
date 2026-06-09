@@ -2562,7 +2562,7 @@ def peajes():
 
                             if conductor_data:
 
-                                conductor = conductor_data["nombre"]
+                                conductor = conductor_data["nombre"]            
 
                     # 🔥 guardar peaje
                     cursor.execute("""
@@ -2676,10 +2676,44 @@ def peajes():
 
     resumen = cursor.fetchall()
 
+    # =========================
+    # PEAJES SIN CONDUCTOR
+    # =========================
+
+    query_sin = """
+        SELECT *
+        FROM peajes
+        WHERE conductor IS NULL
+    """
+
+    params_sin = []
+
+    if desde:
+
+        query_sin += " AND fecha >= %s"
+        params_sin.append(desde)
+
+    if hasta:
+
+        query_sin += " AND fecha <= %s"
+        params_sin.append(hasta)
+
+    query_sin += """
+        ORDER BY fecha DESC, hora DESC
+    """
+
+    cursor.execute(
+        query_sin,
+        params_sin
+    )
+
+    sin_conductor = cursor.fetchall()
+
     return render_template(
         "peajes.html",
         registros=registros,
         resumen=resumen,
+        sin_conductor=sin_conductor,
         desde=desde,
         hasta=hasta
     )
