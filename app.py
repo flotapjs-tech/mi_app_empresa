@@ -2645,11 +2645,11 @@ def peajes():
 
     query_resumen = """
         SELECT
-            conductor,
+            COALESCE(conductor, 'SIN ASIGNAR') as conductor,
             COUNT(*) as cantidad,
             SUM(tarifa) as total
         FROM peajes
-        WHERE conductor IS NOT NULL
+        WHERE 1=1
     """
 
     params_resumen = []
@@ -2675,6 +2675,37 @@ def peajes():
     )
 
     resumen = cursor.fetchall()
+
+    # =========================
+    # TOTALES GENERALES
+    # =========================
+
+    query_totales = """
+        SELECT
+            COUNT(*) as cantidad_total,
+            COALESCE(SUM(tarifa), 0) as monto_total
+        FROM peajes
+        WHERE 1=1
+    """
+
+    params_totales = []
+
+    if desde:
+
+        query_totales += " AND fecha >= %s"
+        params_totales.append(desde)
+
+    if hasta:
+
+        query_totales += " AND fecha <= %s"
+        params_totales.append(hasta)
+
+    cursor.execute(
+        query_totales,
+        params_totales
+    )
+
+    totales = cursor.fetchone()
 
     # =========================
     # PEAJES SIN CONDUCTOR
@@ -2713,6 +2744,7 @@ def peajes():
         "peajes.html",
         registros=registros,
         resumen=resumen,
+        totales=totales,
         sin_conductor=sin_conductor,
         desde=desde,
         hasta=hasta

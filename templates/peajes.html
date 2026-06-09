@@ -22,6 +22,7 @@
     </form>
 
 </div>
+<hr>
 
 <br>
 
@@ -58,6 +59,15 @@
 <div>
 
     <h3>Resumen por conductor</h3>
+    <p>
+        <strong>Cantidad total:</strong>
+        {{ totales.cantidad_total }}
+    </p>
+
+    <p>
+        <strong>Total peajes:</strong>
+        ${{ totales.monto_total }}
+    </p>
 
     <table >
 
@@ -103,7 +113,7 @@
 
         {% for r in sin_conductor %}
 
-        <tr style="background:#3a1f1f;">
+        <tr style="background:#faaeae;">
 
             <td>{{ r.fecha }}</td>
             <td>{{ r.hora }}</td>
