@@ -93,7 +93,7 @@
 
     </table>
 
-    <div class="card">
+    <div>
 
     <h3>
         Peajes sin conductor:
@@ -102,7 +102,7 @@
 
     {% if sin_conductor %}
 
-    <table class="tabla">
+    <table>
 
         <tr>
             <th>Fecha</th>
@@ -113,7 +113,7 @@
 
         {% for r in sin_conductor %}
 
-        <tr style="background:#faaeae;">
+        <tr style="background:#fadfdf;">
 
             <td>{{ r.fecha }}</td>
             <td>{{ r.hora }}</td>
