@@ -5,6 +5,42 @@
 <h2>Peajes</h2>
 
 <div >
+    <div class="mb-3">
+    <label class="form-label">Autopista</label>
+
+    <select
+        name="autopista"
+        class="form-select"
+        required
+    >
+        <option value="">Seleccionar...</option>
+
+        <option value="AU 25 DE MAYO">
+            AUTOPISTAS URBANAS
+        </option>
+
+        <option value="PERITO MORENO">
+            ACCESO OESTE
+        </option>
+
+        <option value="ILLIA">
+            AU. BS AS - LA PLATA
+        </option>
+
+        <option value="BUEN AYRE">
+            BUEN AYRE
+        </option>
+
+        <option value="PANAMERICANA">
+            ACCESO NORTE
+        </option>
+
+        <option value="PANAMERICANA">
+            ACCESO RICCHERI
+        </option>
+
+    </select>
+</div>
 
     <form method="POST" enctype="multipart/form-data">
 
@@ -109,6 +145,8 @@
             <th>Hora</th>
             <th>Patente</th>
             <th>Tarifa</th>
+            <th>Autopista</th>
+            <th>Estacion</th>
         </tr>
 
         {% for r in sin_conductor %}
@@ -119,6 +157,8 @@
             <td>{{ r.hora }}</td>
             <td>{{ r.patente }}</td>
             <td>${{ r.tarifa }}</td>
+            <td>{{ r.autopista }}</td>
+            <td>{{ r.estacion }}</td>
 
         </tr>
 
@@ -151,7 +191,8 @@
         <th>Hora</th>
         <th>Patente</th>
         <th>Tarifa</th>
-        <th>Turno</th>
+        <td>Autopista</td>
+        <td>Estacion</td>
         <th>Conductor</th>
     </tr>
 
@@ -163,7 +204,8 @@
         <td>{{ r.hora }}</td>
         <td>{{ r.patente }}</td>
         <td>${{ r.tarifa }}</td>
-        <td>{{ r.turno }}</td>
+        <td>{{ r.autopista }}</td>
+        <td>{{ r.estacion }}</td>
         <td>{{ r.conductor or "-" }}</td>
 
     </tr>

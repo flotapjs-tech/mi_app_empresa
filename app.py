@@ -2494,6 +2494,7 @@ def peajes():
     if request.method == "POST":
 
         archivo = request.files["archivo"]
+        autopista = request.form.get("autopista")
 
         if archivo:
 
@@ -2508,6 +2509,8 @@ def peajes():
             for _, row in df.iterrows():
 
                 try:
+
+                    estacion = str(row.get("ESTACION", "")).strip()                    
 
                     fecha = str(row.get("FECHA", "")).strip()
 
@@ -2571,12 +2574,14 @@ def peajes():
                             hora,
                             patente,
                             tarifa,
+                            autopista,
+                            estacion,
                             vehiculo_id,
                             conductor_id,
                             conductor,
                             turno
                         )
-                        VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+                        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
 
                         ON CONFLICT (
                             fecha,
@@ -2591,6 +2596,8 @@ def peajes():
                         hora,
                         patente,
                         tarifa,
+                        autopista,
+                        estacion,
                         vehiculo_id,
                         conductor_id,
                         conductor,
