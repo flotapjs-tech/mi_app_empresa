@@ -386,7 +386,11 @@ def conductores():
         conn.commit()
 
     # traer datos
-    cursor.execute("SELECT * FROM conductores")
+    cursor.execute("""
+        SELECT *  
+        FROM conductores
+        ORDER BY activo DESC, nombre
+                   """)
     datos = cursor.fetchall()
 
     
@@ -429,7 +433,8 @@ def conductores():
             "dni_frente": d["dni_frente"],
             "dni_dorso": d["dni_dorso"],
             "contrato": d["contrato"],
-            "alerta": alerta
+            "alerta": alerta,
+            "activo": d["activo"]
         })
 
     return render_template(
