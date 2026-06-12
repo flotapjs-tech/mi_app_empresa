@@ -111,23 +111,32 @@
         </td>
 
         <td>
-            {% if d.activo %}
-                <span style="color:green;">Activo</span>
-            {% else %}
-                <span style="color:red;">Inactivo</span>
-            {% endif %}
-        </td>
 
-        <td>
-            <a href="/toggle_conductor/{{ d.id }}"
-            class="btn btn-sm btn-warning">
-                {% if d.activo %}
-                    Desactivar
-                {% else %}
-                    Activar
-                {% endif %}
-            </a>
-        </td>
+    {% if d.activo %}
+
+        <form method="POST"
+              action="{{ url_for('toggle_conductor', id=d.id) }}">
+
+            <button type="submit">
+                Desactivar
+            </button>
+
+        </form>
+
+    {% else %}
+
+        <form method="POST"
+              action="{{ url_for('toggle_conductor', id=d.id) }}">
+
+            <button type="submit">
+                Activar
+            </button>
+
+        </form>
+
+    {% endif %}
+
+</td>
 
         <!-- ELIMINAR -->
         <td>

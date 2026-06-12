@@ -437,7 +437,7 @@ def conductores():
         datos=datos_procesados
     )
 
-@app.route("/toggle_conductor/<int:id>")
+@app.route("/toggle_conductor/<int:id>", methods=["POST"])
 @login_requerido
 def toggle_conductor(id):
 
