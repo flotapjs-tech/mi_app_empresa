@@ -111,7 +111,7 @@
         </td>
 
         <td>
-            {% if conductor.activo %}
+            {% if d.activo %}
                 <span style="color:green;">Activo</span>
             {% else %}
                 <span style="color:red;">Inactivo</span>
@@ -121,7 +121,7 @@
         <td>
             <a href="/toggle_conductor/{{ conductor.id }}"
             class="btn btn-sm btn-warning">
-                {% if conductor.activo %}
+                {% if d.activo %}
                     Desactivar
                 {% else %}
                     Activar
