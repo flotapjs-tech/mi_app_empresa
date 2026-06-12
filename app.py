@@ -437,6 +437,23 @@ def conductores():
         datos=datos_procesados
     )
 
+@app.route("/toggle_conductor/<int:id>")
+@login_requerido
+def toggle_conductor(id):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE conductores
+        SET activo = NOT activo
+        WHERE id = %s
+    """, (id,))
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/conductores")
 
 @app.route("/eliminar_conductor/<int:id>")
 @login_requerido

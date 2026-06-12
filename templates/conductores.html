@@ -51,6 +51,7 @@
         <th>Foto DNI</th>
         <th>Contrato</th>
         <th>Editar</th>
+        <th>Estado</th>
         <th>Borrar</th>
     </tr>
 
@@ -106,6 +107,25 @@
             <a class="btn-editar"
                href="/editar_conductor/{{ d.id }}">
                ✏️
+            </a>
+        </td>
+
+        <td>
+            {% if conductor.activo %}
+                <span style="color:green;">Activo</span>
+            {% else %}
+                <span style="color:red;">Inactivo</span>
+            {% endif %}
+        </td>
+
+        <td>
+            <a href="/toggle_conductor/{{ conductor.id }}"
+            class="btn btn-sm btn-warning">
+                {% if conductor.activo %}
+                    Desactivar
+                {% else %}
+                    Activar
+                {% endif %}
             </a>
         </td>
 
