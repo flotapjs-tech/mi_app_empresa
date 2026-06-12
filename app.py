@@ -899,6 +899,7 @@ def asignaciones():
     cursor.execute("""
         SELECT *
         FROM conductores
+        WHERE activo = TRUE
         ORDER BY nombre
     """)
     conductores = cursor.fetchall()
@@ -1034,6 +1035,7 @@ def adelantos():
     cursor.execute("""
         SELECT id, nombre
         FROM conductores
+        WHERE activo = TRUE
         ORDER BY nombre
     """)
     conductores = cursor.fetchall()
