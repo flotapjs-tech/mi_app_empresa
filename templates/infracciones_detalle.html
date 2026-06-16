@@ -54,7 +54,7 @@
                 <span style="color:green;">Pagada</span>
                 <br>
                 <small>
-                    {{ i.fecha_pago.strftime('%d/%m/%Y') if i.fecha_pago else '' }}
+                    {{ i.fecha_pago[:10].split('-')|reverse|join('/') if i.fecha_pago else '' }}
                 </small>
             {% else %}
                 <span style="color:red;">Pendiente</span>
