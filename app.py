@@ -2494,9 +2494,10 @@ def marcar_pagada(id):
     conn = get_connection()
     cursor = conn.cursor()
 
+    # Ver estado actual
     cursor.execute("""
-        UPDATE infracciones
-        SET pagada = 1
+        SELECT pagada
+        FROM infracciones
         WHERE id = %s
     """, (id,))
 
