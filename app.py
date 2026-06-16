@@ -2500,6 +2500,28 @@ def marcar_pagada(id):
         WHERE id = %s
     """, (id,))
 
+    infraccion = cursor.fetchone()
+
+    if infraccion["pagada"] == 1:
+
+        cursor.execute("""
+            UPDATE infracciones
+            SET
+                pagada = 0,
+                fecha_pago = NULL
+            WHERE id = %s
+        """, (id,))
+
+    else:
+
+        cursor.execute("""
+            UPDATE infracciones
+            SET
+                pagada = 1,
+                fecha_pago = NOW()
+            WHERE id = %s
+        """, (id,))
+
     conn.commit()
     conn.close()
 
