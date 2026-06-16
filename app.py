@@ -2791,7 +2791,8 @@ def alertas():
     cursor = conn.cursor()
 
     hoy = datetime.today().date()
-    limite = hoy + timedelta(days=7)
+    limite = hoy + timedelta(days=30)
+    limite_menor = hoy + timedelta(days=7)
 
     # =========================
     # LICENCIAS DE CONDUCTORES
@@ -2856,7 +2857,7 @@ def alertas():
           AND NULLIF(tubo, '')::date <= %s
 
         ORDER BY fecha
-    """, (limite, limite, limite, limite))
+    """, (limite_menor, limite_menor, limite_menor, limite_menor))
 
     vehiculos_raw = cursor.fetchall()
 
@@ -2899,7 +2900,8 @@ def alertas_global():
     cursor = conn.cursor()
 
     hoy = datetime.today().date()
-    limite = hoy + timedelta(days=14)
+    limite = hoy + timedelta(days=30)
+    limite_menor = hoy + timedelta(days=7)
 
     # conductores
     cursor.execute("""
@@ -2946,20 +2948,9 @@ def alertas_global():
                 AND date(tubo) <= %s
             )
         AS total
-    """, (limite, limite, limite, limite))
+    """, (limite_menor, limite_menor, limite_menor, limite_menor))
 
     veh = cursor.fetchone()["total"]
-
-    # infracciones
-    '''cursor.execute("""
-        SELECT COUNT(*) as total
-        FROM infracciones
-        WHERE fecha_vencimiento IS NOT NULL
-        AND fecha_vencimiento != ''
-        AND date(fecha_vencimiento) <= %s
-    """, (limite,))
-
-    inf = cursor.fetchone()["total"]'''
 
     conn.close()
 
