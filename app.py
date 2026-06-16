@@ -2241,6 +2241,7 @@ def infracciones_conductor(conductor_id):
                 i.fecha_vencimiento,
                 i.pagada,
                 v.patente,
+                i.fecha_pago,       
                 i.numero,
                 i.vehiculo_id
             FROM infracciones i
@@ -2274,6 +2275,7 @@ def infracciones_conductor(conductor_id):
                 i.monto,
                 i.fecha_vencimiento,
                 i.pagada,
+                i.fecha_pago,       
                 v.patente,
                 i.numero,
                 i.vehiculo_id
