@@ -73,18 +73,20 @@
 
 <div style="margin-bottom:15px;">
 
-    <b>Total conectados:</b>
+    <b>Turnos:</b>
     {{ total_asignaciones }}
 
     |
 
     <b>Día:</b>
-    {{ total_dia }}
+    {{ total_dia }}/{{ total_vehiculos }}
+    (libres {{ disponibles_dia }})
 
     |
 
     <b>Noche:</b>
-    {{ total_noche }}
+    {{ total_noche }}/{{ total_vehiculos }}
+    (libres {{ disponibles_noche }})
 
 </div>
 

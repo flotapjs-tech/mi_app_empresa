@@ -925,6 +925,11 @@ def asignaciones():
     """)
     vehiculos = cursor.fetchall()
 
+    total_vehiculos = len(vehiculos)
+
+    disponibles_dia = total_vehiculos - total_dia
+    disponibles_noche = total_vehiculos - total_noche
+
     cursor.close()
     conn.close()
 
@@ -936,7 +941,10 @@ def asignaciones():
         fecha=fecha,
         total_asignaciones=total_asignaciones,
         total_dia=total_dia,
-        total_noche=total_noche
+        total_noche=total_noche,
+        total_vehiculos=total_vehiculos,
+        disponibles_dia=disponibles_dia,
+        disponibles_noche=disponibles_noche
     )
 
 
