@@ -112,6 +112,39 @@
                 </a>
 
                 &nbsp;
+                <hr>
+
+                {% if i.archivos|length < 6 %}
+
+                <form
+                    method="POST"
+                    action="/subir_archivo_infraccion/{{ i.id }}"
+                    enctype="multipart/form-data"
+                >
+
+                    <input
+                        type="file"
+                        name="archivo"
+                        required
+                    >
+
+                    <button type="submit">
+                        Subir archivo
+                    </button>
+
+                </form>
+
+                <small>
+                    {{ i.archivos|length }}/6 archivos
+                </small>
+
+                {% else %}
+
+                <span style="color:red;">
+                    Máximo de 6 archivos alcanzado
+                </span>
+
+                {% endif %}
 
                 <a
                     href="/eliminar_archivo_infraccion/{{ a.id }}"
