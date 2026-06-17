@@ -2590,6 +2590,28 @@ def infracciones_asignadas():
 
     return render_template("infracciones_asignadas.html", resumen=resumen)
 
+@app.route("/eliminar_archivo_infraccion/<int:id>")
+@login_requerido
+def eliminar_archivo_infraccion(id):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        DELETE
+        FROM infracciones_archivos
+        WHERE id = %s
+    """, (id,))
+
+    conn.commit()
+    conn.close()
+
+    flash(
+        "Archivo eliminado",
+        "success"
+    )
+
+    return redirect(request.referrer)
 
 @app.route('/asignar_infraccion/<int:id>', methods=['POST'])
 @login_requerido
