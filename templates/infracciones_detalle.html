@@ -111,6 +111,15 @@
                     👁️ {{ a.nombre_archivo }}
                 </a>
 
+                &nbsp;
+
+                <a
+                    href="/eliminar_archivo_infraccion/{{ a.id }}"
+                    onclick="return confirm('¿Eliminar archivo?')"
+                >
+                    🗑️
+                </a>
+
             </div>
 
         {% endfor %}
