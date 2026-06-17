@@ -2418,6 +2418,19 @@ def infracciones_conductor(conductor_id):
 
         i = dict(i)
 
+        cursor.execute("""
+            SELECT
+                id,
+                url,
+                nombre_archivo,
+                fecha_carga
+            FROM infracciones_archivos
+            WHERE infraccion_id = %s
+            ORDER BY fecha_carga DESC
+        """, (i["id"],))
+
+        i["archivos"] = cursor.fetchall()
+
         # =========================
         # SOLO PARA SIN ASIGNAR
         # =========================

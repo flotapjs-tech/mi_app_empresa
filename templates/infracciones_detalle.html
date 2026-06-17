@@ -25,6 +25,7 @@
         <th>Estado</th>
         <th>Marcar paga</th>
         <th>Eliminar</th>
+        <th>Archivos</th>
     </tr>
 
     {% for i in infracciones %}
@@ -80,20 +81,9 @@
             </a>
         </td>
         <td>
-            <form
-            method="POST"
-            action="/subir_archivo_infraccion/{{ i.id }}"
-            enctype="multipart/form-data"
-        >
-            <input
-                type="file"
-                name="archivo"
-            >
+            
+            {{ i.archivos|length }}
 
-            <button type="submit">
-                Subir
-            </button>
-            </form>
         </td>
         
 
