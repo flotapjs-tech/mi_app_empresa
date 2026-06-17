@@ -893,6 +893,18 @@ def asignaciones():
     cursor.execute(query, params)
     asignaciones = cursor.fetchall()
 
+    total_asignaciones = len(asignaciones)
+
+    total_dia = sum(
+        1 for a in asignaciones
+        if a["turno"] == "dia"
+    )
+
+    total_noche = sum(
+        1 for a in asignaciones
+        if a["turno"] == "noche"
+    )
+
     # ======================
     # SELECT CONDUCTORES
     # ======================
@@ -922,7 +934,10 @@ def asignaciones():
         asignaciones=asignaciones,
         conductores=conductores,
         vehiculos=vehiculos,
-        fecha=fecha
+        fecha=fecha,
+        total_asignaciones=total_asignaciones,
+        total_dia=total_dia,
+        total_noche=total_noche
     )
 
 
