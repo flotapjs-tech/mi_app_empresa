@@ -81,15 +81,67 @@
             </a>
         </td>
         <td>
-            
-            {{ i.archivos|length }}
+
+            <button
+                type="button"
+                onclick="toggleArchivos('{{ i.id }}')"
+            >
+                📎 Fotomultas ({{ i.archivos|length }})
+            </button>
 
         </td>
         
 
     </tr>
+
+    <tr
+    id="archivos-{{ i.id }}"
+    style="display:none;"
+>
+    <td colspan="20">
+
+        {% for a in i.archivos %}
+
+            <div style="margin:5px 0;">
+
+                <a
+                    href="{{ a.url }}"
+                    target="_blank"
+                >
+                    👁️ {{ a.nombre_archivo }}
+                </a>
+
+            </div>
+
+        {% endfor %}
+
+    </td>
+</tr>
+
     {% endfor %}
 
 </table>
+
+<script>
+
+function toggleArchivos(id){
+
+    let fila =
+        document.getElementById(
+            "archivos-" + id
+        );
+
+    if(fila.style.display === "none"){
+
+        fila.style.display = "table-row";
+
+    }else{
+
+        fila.style.display = "none";
+
+    }
+}
+
+</script>
 
 {% endblock %}
