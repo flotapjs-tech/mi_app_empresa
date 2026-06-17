@@ -79,6 +79,22 @@
                 <button>🗑️</button>
             </a>
         </td>
+        <td>
+            <form
+            method="POST"
+            action="/subir_archivo_infraccion/{{ i.id }}"
+            enctype="multipart/form-data"
+        >
+            <input
+                type="file"
+                name="archivo"
+            >
+
+            <button type="submit">
+                Subir
+            </button>
+            </form>
+        </td>
         
 
     </tr>

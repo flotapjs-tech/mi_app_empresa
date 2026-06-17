@@ -397,12 +397,16 @@ def conductores():
         contrato = request.files["contrato"]
 
         def guardar_archivo(archivo):
-            if archivo and archivo.filename != "":
-                nombre = secure_filename(archivo.filename)
-                ruta = os.path.join(carpeta, nombre)
-                archivo.save(ruta)
-                return nombre
-            return ""
+
+            if not archivo or archivo.filename == "":
+                return ""
+
+            resultado = cloudinary.uploader.upload(
+                archivo,
+                resource_type="auto"
+            )
+
+            return resultado["secure_url"]
 
         nombre_lic_frente = guardar_archivo(licencia_frente)
         nombre_lic_dorso = guardar_archivo(licencia_dorso)
@@ -485,6 +489,55 @@ def conductores():
         "conductores.html",
         datos=datos_procesados
     )
+
+@app.route("/subir_archivo_infraccion/<int:infraccion_id>", methods=["POST"])
+@login_requerido
+def subir_archivo_infraccion(infraccion_id):
+
+    archivo = request.files.get("archivo")
+
+    if not archivo or archivo.filename == "":
+        flash("Seleccione un archivo", "warning")
+        return redirect(request.referrer)
+
+    try:
+
+        resultado = cloudinary.uploader.upload(
+            archivo,
+            resource_type="auto"
+        )
+
+        url = resultado["secure_url"]
+
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            INSERT INTO infracciones_archivos (
+                infraccion_id,
+                url,
+                nombre_archivo
+            )
+            VALUES (%s, %s, %s)
+        """, (
+            infraccion_id,
+            url,
+            archivo.filename
+        ))
+
+        conn.commit()
+        conn.close()
+
+        flash("Archivo cargado correctamente", "success")
+
+    except Exception as e:
+
+        flash(
+            f"Error al subir archivo: {str(e)}",
+            "danger"
+        )
+
+    return redirect(request.referrer)
 
 @app.route("/toggle_conductor/<int:id>", methods=["POST"])
 @login_requerido
