@@ -322,13 +322,20 @@ crear_db()
 '''
 
 @app.route("/test_cloudinary")
+@login_requerido
 def test_cloudinary():
 
-    resultado = cloudinary.uploader.upload(
-        "https://res.cloudinary.com/demo/image/upload/sample.jpg"
-    )
+    try:
 
-    return resultado["secure_url"]
+        resultado = cloudinary.uploader.upload(
+            "https://res.cloudinary.com/demo/image/upload/sample.jpg"
+        )
+
+        return f"OK: {resultado['secure_url']}"
+
+    except Exception as e:
+
+        return f"ERROR: {str(e)}"
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
