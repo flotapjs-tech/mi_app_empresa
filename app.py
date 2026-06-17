@@ -321,6 +321,10 @@ def limpiar_patente(patente):
 crear_db()
 '''
 
+@app.route("/ping")
+def ping():
+    return "PING OK"
+
 @app.route("/test_cloudinary")
 @login_requerido
 def test_cloudinary():
