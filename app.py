@@ -15,11 +15,27 @@ import hashlib
 from psycopg2.extras import RealDictCursor
 import pandas as pd
 from datetime import datetime, timedelta
+import cloudinary
+import cloudinary.uploader
+
 
 
 app = Flask(__name__)
 
 app.secret_key = "080980110980060681"
+
+cloudinary.config(
+    cloud_name=os.environ.get(
+        "CLOUDINARY_CLOUD_NAME"
+    ),
+    api_key=os.environ.get(
+        "CLOUDINARY_API_KEY"
+    ),
+    api_secret=os.environ.get(
+        "CLOUDINARY_API_SECRET"
+    ),
+    secure=True
+)
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
@@ -109,6 +125,17 @@ def buscar_conductor_automatico(
 
     return res["conductor_id"] if res else None
 
+def subir_archivo_cloudinary(archivo):
+
+    if not archivo or archivo.filename == "":
+        return None
+
+    resultado = cloudinary.uploader.upload(
+        archivo,
+        resource_type="auto"
+    )
+
+    return resultado["secure_url"]
 
 def login_requerido(f):
     @wraps(f)
@@ -294,6 +321,14 @@ def limpiar_patente(patente):
 crear_db()
 '''
 
+@app.route("/test_cloudinary")
+def test_cloudinary():
+
+    resultado = cloudinary.uploader.upload(
+        "https://res.cloudinary.com/demo/image/upload/sample.jpg"
+    )
+
+    return resultado["secure_url"]
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
