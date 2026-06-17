@@ -843,9 +843,8 @@ def asignaciones():
     # ======================
     if historial:
         fecha = None
-
-    elif hoy_filtro:
-        fecha = hoy
+    else:
+        fecha = fecha or hoy
 
     # ======================
     # QUERY BASE
