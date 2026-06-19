@@ -1740,7 +1740,7 @@ def infracciones():
                 v.patente,
                 c.nombre,
                 CASE 
-                    WHEN i.fecha_carga::timestamp >= NOW() - INTERVAL '8 hours'
+                    WHEN i.fecha_carga::timestamp >= NOW() - INTERVAL '12 hours'
                     THEN 1
                     ELSE 0
                 END as nueva
@@ -2571,7 +2571,7 @@ def infracciones_asignadas():
             ) AS monto_total,
 
             COUNT(*) FILTER (
-                WHERE i.fecha_carga::timestamp >= NOW() - INTERVAL '2 hours'
+                WHERE i.fecha_carga::timestamp >= NOW() - INTERVAL '12 hours'
             ) AS nuevas
 
         FROM infracciones i
